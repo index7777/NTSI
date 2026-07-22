@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+﻿import Phaser from "phaser";
 import {
   ATTRIBUTE_LABELS,
   ATTRIBUTES,
@@ -31,6 +31,17 @@ interface PlayerState {
   foundationComponent: Record<Attribute, number>;
   foundationPills: number;
   metLiuRuyan: boolean;
+  breathingTutorialComplete: boolean;
+  foundationLessonSeen: boolean;
+  sectDay: number;
+  timeSlot: number;
+  activityStats: Record<string, { count: number; cultivation: number }>;
+  totalTrainingCount: number;
+  tribulationCount: number;
+  breakthroughCount: number;
+  realmFallCount: number;
+  realmFallLevels: number;
+  playSeconds: number;
 }
 
 interface SaveData {
@@ -43,6 +54,13 @@ const ROOT_LABELS: Record<RootId, string> = {
   triple: "三靈根",
   dual: "雙靈根",
   single: "單靈根",
+};
+
+const ROOT_REVELATIONS: Record<RootId, string> = {
+  single: "一脈通天，靈機純澈。此身若不負道，仙途可期。",
+  dual: "二氣相生，陰陽互濟。守心勤修，自可行遠。",
+  triple: "三脈並立，靈機交錯。調和諸氣，亦能問道長生。",
+  mixed: "諸靈混雜，道途多艱。然天門未閉，大道未絕。",
 };
 
 const COLORS = {
@@ -63,6 +81,8 @@ export class OpeningScene extends Phaser.Scene {
   private readonly dailyMusicKeys = ["daily-music-1", "daily-music-2", "daily-music-3"];
   private currentBgm?: Phaser.Sound.BaseSound;
   private musicMode: "none" | "menu" | "game-start" | "daily" = "none";
+  private playtimeCheckpoint = Date.now();
+  private systemOverlay?: Phaser.GameObjects.Container;
   private player: PlayerState = {
     gender: "male",
     name: "無名",
@@ -76,6 +96,17 @@ export class OpeningScene extends Phaser.Scene {
     foundationComponent: { spirit: 0, bone: 0, body: 0, sense: 0 },
     foundationPills: 0,
     metLiuRuyan: false,
+    breathingTutorialComplete: false,
+    foundationLessonSeen: false,
+    sectDay: 1,
+    timeSlot: 0,
+    activityStats: {},
+    totalTrainingCount: 0,
+    tribulationCount: 0,
+    breakthroughCount: 0,
+    realmFallCount: 0,
+    realmFallLevels: 0,
+    playSeconds: 0,
   };
 
   constructor() {
@@ -83,17 +114,20 @@ export class OpeningScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("game-title", "assets/game-title-bg-v3.png");
-    this.load.image("game-logo", "assets/game-logo-v1.png");
-    this.load.image("title-traveler", "assets/title-traveler-v1.png");
-    this.load.image("question-stone-scene", "assets/question-stone-dormant-v1.png");
-    this.load.image("sect-courtyard", "assets/sect-courtyard-v1.png");
-    this.load.image("foundation-cave", "assets/foundation-cave-v1.png");
-    this.load.audio("daily-music-1", "assets/audio/daily-01.mp3");
-    this.load.audio("daily-music-2", "assets/audio/daily-02.mp3");
-    this.load.audio("daily-music-3", "assets/audio/daily-03.mp3");
-    this.load.audio("menu-music", "assets/audio/menu.mp3");
-    this.load.audio("game-start-music", "assets/audio/game-start.mp3");
+    this.load.image("game-title", "assets/title/background-v3.png");
+    this.load.image("game-logo", "assets/title/logo-v1.png");
+    this.load.image("title-traveler", "assets/title/traveler-v1.png");
+    this.load.image("question-stone-scene", "assets/scenes/question-stone-dormant-v1.png");
+    this.load.image("sect-courtyard", "assets/scenes/sect-courtyard-v1.png");
+    this.load.image("foundation-cave", "assets/scenes/foundation-cave-v1.png");
+    this.load.image("player-male-choice", "assets/characters/player-male-v2.png");
+    this.load.image("player-female-choice", "assets/characters/player-female-v3.png");
+    this.load.image("sect-elder", "assets/characters/sect-elder-v1.png");
+    this.load.audio("daily-music-1", "assets/audio/music/daily-01.mp3");
+    this.load.audio("daily-music-2", "assets/audio/music/daily-02.mp3");
+    this.load.audio("daily-music-3", "assets/audio/music/daily-03.mp3");
+    this.load.audio("menu-music", "assets/audio/music/menu.mp3");
+    this.load.audio("game-start-music", "assets/audio/music/game-start.mp3");
   }
 
   create() {
@@ -101,6 +135,7 @@ export class OpeningScene extends Phaser.Scene {
     this.layer = this.add.container(0, 0);
     this.input.once("pointerdown", () => this.startLoopingMusic("menu-music", "menu"));
     this.input.keyboard?.once("keydown", () => this.startLoopingMusic("menu-music", "menu"));
+    this.input.keyboard?.on("keydown-ESC", () => this.toggleSystemMenu());
     this.showTitle();
   }
 
@@ -189,8 +224,6 @@ export class OpeningScene extends Phaser.Scene {
       g.fillTriangle(190, 430, 390, 135, 540, 430);
       g.fillStyle(0xffffff, 0.68).fillEllipse(270, 445, 700, 180);
     }
-    g.lineStyle(2, COLORS.ink, 0.25);
-    g.strokeRect(20, 24, 500, 912);
     this.layer.add(g);
   }
 
@@ -208,17 +241,66 @@ export class OpeningScene extends Phaser.Scene {
   }
 
   private button(x: number, y: number, label: string, action: () => void, width = 330) {
-    const background = this.add.rectangle(x, y, width, 72, COLORS.ink, 0.92)
-      .setStrokeStyle(2, COLORS.gold, 0.7)
-      .setInteractive({ useHandCursor: true });
+    const background = this.add.graphics();
+    background.fillStyle(0xf4efe2, 0.94).fillRoundedRect(x - width / 2, y - 36, width, 72, 14);
+    background.lineStyle(2, COLORS.ink, 0.72).strokeRoundedRect(x - width / 2, y - 36, width, 72, 14);
+    background.fillStyle(COLORS.gold, 0.78).fillCircle(x - width / 2 + 18, y, 4).fillCircle(x + width / 2 - 18, y, 4);
+    const hitArea = this.add.zone(x, y, width, 72).setInteractive({ useHandCursor: true });
     const caption = this.text(x, y, label, 25, "#f8f3df");
-    background.on("pointerdown", () => background.setScale(0.97));
-    background.on("pointerup", () => {
-      background.setScale(1);
+    caption.setColor("#18312f");
+    hitArea.on("pointerdown", () => background.setAlpha(0.7));
+    hitArea.on("pointerup", () => {
+      background.setAlpha(1);
       action();
     });
     this.layer.addAt(background, Math.max(0, this.layer.getIndex(caption) - 1));
-    return background;
+    this.layer.add(hitArea);
+    return hitArea;
+  }
+
+  private toggleSystemMenu() {
+    if (this.systemOverlay) {
+      this.systemOverlay.destroy(true);
+      this.systemOverlay = undefined;
+      this.time.paused = false;
+      this.tweens.resumeAll();
+      return;
+    }
+    this.time.paused = true;
+    this.tweens.pauseAll();
+    const overlay = this.add.container(0, 0).setDepth(1000);
+    this.systemOverlay = overlay;
+    const blocker = this.add.rectangle(270, 480, 540, 960, 0x0b1715, 0.82).setInteractive();
+    const panel = this.add.graphics();
+    panel.fillStyle(0xf3eee1, 0.98).fillRoundedRect(70, 115, 400, 730, 22);
+    panel.lineStyle(3, COLORS.jade, 0.72).strokeRoundedRect(70, 115, 400, 730, 22);
+    const title = this.add.text(270, 165, "遊戲選單", { fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif', fontSize: "34px", color: "#18312f" }).setOrigin(0.5);
+    overlay.add([blocker, panel, title]);
+    const modalButton = (y: number, label: string, action: () => void) => {
+      const paper = this.add.graphics();
+      paper.fillStyle(0xe9e4d7, 0.96).fillRoundedRect(120, y - 31, 300, 62, 12);
+      paper.lineStyle(2, COLORS.ink, 0.55).strokeRoundedRect(120, y - 31, 300, 62, 12);
+      const caption = this.add.text(270, y, label, { fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif', fontSize: "23px", color: "#18312f" }).setOrigin(0.5);
+      const zone = this.add.zone(270, y, 300, 62).setInteractive({ useHandCursor: true });
+      zone.on("pointerup", action);
+      overlay.add([paper, caption, zone]);
+    };
+    modalButton(250, "繼續遊戲", () => this.toggleSystemMenu());
+    modalButton(335, "修行紀錄", () => { this.toggleSystemMenu(); this.showActivityHistory(); });
+    modalButton(420, this.sound.mute ? "設定 · 開啟音樂" : "設定 · 關閉音樂", () => {
+      this.sound.mute = !this.sound.mute;
+      this.toggleSystemMenu();
+      this.toggleSystemMenu();
+    });
+    modalButton(505, "道心崩了", () => { this.toggleSystemMenu(); this.showDestroyConfirmation(); });
+    modalButton(590, "離開遊戲", () => {
+      this.toggleSystemMenu();
+      this.saveGame();
+      window.close();
+      this.time.delayedCall(120, () => this.showTitle());
+    });
+    const hint = this.add.text(270, 775, "ESC 返回", { fontFamily: '"Microsoft JhengHei", sans-serif', fontSize: "18px", color: "#607d77" }).setOrigin(0.5);
+    overlay.add(hint);
   }
 
   private showTitle() {
@@ -289,6 +371,17 @@ export class OpeningScene extends Phaser.Scene {
       foundationComponent: { spirit: 0, bone: 0, body: 0, sense: 0 },
       foundationPills: 0,
       metLiuRuyan: false,
+      breathingTutorialComplete: false,
+      foundationLessonSeen: false,
+      sectDay: 1,
+      timeSlot: 0,
+      activityStats: {},
+      totalTrainingCount: 0,
+      tribulationCount: 0,
+      breakthroughCount: 0,
+      realmFallCount: 0,
+      realmFallLevels: 0,
+      playSeconds: 0,
     };
     this.showGenderChoice();
   }
@@ -299,6 +392,10 @@ export class OpeningScene extends Phaser.Scene {
       return;
     }
     if (this.player.realm === "qi" && this.player.level >= 1) {
+      if (!this.player.breathingTutorialComplete) {
+        this.showMuQingli();
+        return;
+      }
       this.showMainMenu();
       return;
     }
@@ -323,6 +420,17 @@ export class OpeningScene extends Phaser.Scene {
       data.player.foundationComponent ??= { spirit: 0, bone: 0, body: 0, sense: 0 };
       data.player.foundationPills ??= 0;
       data.player.metLiuRuyan ??= false;
+      data.player.breathingTutorialComplete ??= data.player.realm !== "uninitiated" && data.player.level >= 2;
+      data.player.foundationLessonSeen ??= false;
+      data.player.sectDay ??= 1;
+      data.player.timeSlot ??= 0;
+      data.player.activityStats ??= {};
+      data.player.totalTrainingCount ??= Object.values(data.player.activityStats).reduce((sum, item) => sum + item.count, 0);
+      data.player.tribulationCount ??= 0;
+      data.player.breakthroughCount ??= 0;
+      data.player.realmFallCount ??= 0;
+      data.player.realmFallLevels ??= 0;
+      data.player.playSeconds ??= 0;
       return data;
     } catch {
       return null;
@@ -330,6 +438,9 @@ export class OpeningScene extends Phaser.Scene {
   }
 
   private saveGame() {
+    const now = Date.now();
+    this.player.playSeconds += Math.max(0, Math.floor((now - this.playtimeCheckpoint) / 1000));
+    this.playtimeCheckpoint = now;
     const data: SaveData = { version: 1, player: this.player };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
   }
@@ -351,20 +462,19 @@ export class OpeningScene extends Phaser.Scene {
     this.reset();
     this.text(270, 95, "選擇此身", 42);
     this.text(270, 145, "不問男女，只問本心", 20, "#607d77");
-    this.characterCard(155, 390, "male", "男角");
-    this.characterCard(385, 390, "female", "女角");
+    this.characterCard(155, 390, "male");
+    this.characterCard(385, 390, "female");
   }
 
-  private characterCard(x: number, y: number, gender: Gender, label: string) {
-    const card = this.add.rectangle(x, y, 190, 390, 0xf7f3e8, 0.95)
-      .setStrokeStyle(3, COLORS.jade, 0.8)
-      .setInteractive({ useHandCursor: true });
-    const head = this.add.circle(x, y - 90, 43, 0xf2d3b4);
-    const hair = this.add.arc(x, y - 108, 92, 190, 350, false, 0x1d2927);
-    const body = this.add.triangle(x, y + 80, x - 66, y + 150, x + 66, y + 150, x, y - 40, 0xe9ece6);
-    const sash = this.add.rectangle(x, y + 78, 100, 18, COLORS.jade);
-    this.layer.add([card, body, sash, head, hair]);
-    this.text(x, y + 170, label, 24);
+  private characterCard(x: number, y: number, gender: Gender) {
+    const card = this.add.zone(x, y, 205, 410).setInteractive({ useHandCursor: true });
+    const portrait = this.add.image(x, y - 12, gender === "male" ? "player-male-choice" : "player-female-choice");
+    const portraitScale = Math.min(164 / portrait.width, 315 / portrait.height);
+    portrait.setScale(portraitScale);
+    this.layer.add([portrait, card]);
+    this.text(x, y + 190, gender === "male" ? "男" : "女", 24);
+    card.on("pointerover", () => portrait.setScale(portraitScale * 1.03));
+    card.on("pointerout", () => portrait.setScale(portraitScale));
     card.on("pointerup", () => {
       this.player.gender = gender;
       this.showNameEntry();
@@ -412,16 +522,15 @@ export class OpeningScene extends Phaser.Scene {
     this.text(270, 82, "「此石名曰問仙石。」", 25);
     this.text(270, 130, "「可照靈根，可辨仙緣。」", 23, "#526f69");
     this.text(270, 178, "「願入宗者，皆須一問。」", 23, "#526f69");
-    const bodyColor = this.player.gender === "female" ? 0x9fb8bc : 0x9ca99d;
-    const robe = this.add.ellipse(92, 720, 108, 160, bodyColor, 1).setStrokeStyle(3, COLORS.ink, 0.75);
-    const head = this.add.circle(92, 616, 42, 0xe5c7aa).setStrokeStyle(3, COLORS.ink, 0.75);
-    const hair = this.player.gender === "female"
-      ? this.add.ellipse(92, 590, 78, 70, 0x1d2c2a, 1)
-      : this.add.arc(92, 594, 82, 190, 350, false, 0x1d2c2a, 1);
-    this.layer.add([robe, head, hair]);
+    const playerKey = this.player.gender === "female" ? "player-female-choice" : "player-male-choice";
+    const playerPortrait = this.add.image(92, 690, playerKey);
+    playerPortrait.setScale(Math.min(150 / playerPortrait.width, 315 / playerPortrait.height));
+    const elder = this.add.image(448, 655, "sect-elder");
+    elder.setScale(Math.min(150 / elder.width, 330 / elder.height));
+    this.layer.add([playerPortrait, elder]);
     const stoneZone = this.add.zone(294, 505, 180, 390).setInteractive({ useHandCursor: true });
     this.layer.add(stoneZone);
-    const instruction = this.text(270, 842, "【宗門執事】\n「將手放上去。」", 22, "#f8f3df");
+    const instruction = this.text(270, 842, "宗門執事\n「將手放上去。」", 22, "#f8f3df");
     instruction.setBackgroundColor("rgba(20,42,39,0.82)").setPadding(20, 12);
     instruction.setAlpha(0);
     stoneZone.disableInteractive();
@@ -439,17 +548,30 @@ export class OpeningScene extends Phaser.Scene {
     stoneZone.on("pointerup", () => {
       stoneZone.disableInteractive();
       this.tweens.killTweensOf(instruction);
-      const glow = this.add.ellipse(294, 510, 230, 430, COLORS.gold, 0.08);
-      glow.setBlendMode(Phaser.BlendModes.ADD);
-      this.layer.add(glow);
-      this.tweens.add({
-        targets: glow,
-        alpha: 0.72,
-        scaleX: 1.22,
-        scaleY: 1.08,
-        duration: 650,
-        onComplete: () => this.revealAptitude(),
-      });
+      const glow = this.add.ellipse(294, 510, 190, 370, COLORS.gold, 0.12).setBlendMode(Phaser.BlendModes.ADD);
+      const innerRing = this.add.ellipse(294, 510, 120, 260).setStrokeStyle(5, COLORS.gold, 0.9).setBlendMode(Phaser.BlendModes.ADD);
+      const outerRing = this.add.ellipse(294, 510, 210, 410).setStrokeStyle(3, COLORS.jade, 0.7).setBlendMode(Phaser.BlendModes.ADD);
+      this.layer.add([glow, innerRing, outerRing]);
+      this.tweens.add({ targets: glow, alpha: 0.82, scaleX: 1.45, scaleY: 1.18, duration: 950, yoyo: true });
+      this.tweens.add({ targets: innerRing, scale: 1.55, alpha: 0, angle: 18, duration: 1150 });
+      this.tweens.add({ targets: outerRing, scale: 0.62, alpha: 0.95, angle: -12, duration: 900, yoyo: true });
+      for (let index = 0; index < 9; index += 1) {
+        const mote = this.add.circle(Phaser.Math.Between(245, 345), Phaser.Math.Between(390, 620), Phaser.Math.Between(4, 9), index % 2 ? COLORS.gold : COLORS.jade, 0.9)
+          .setBlendMode(Phaser.BlendModes.ADD);
+        this.layer.add(mote);
+        this.tweens.add({
+          targets: mote,
+          x: playerPortrait.x + Phaser.Math.Between(-20, 20),
+          y: playerPortrait.y - Phaser.Math.Between(20, 150),
+          alpha: 0,
+          scale: 0.25,
+          duration: 900 + index * 85,
+          ease: "Sine.inOut",
+        });
+      }
+      this.cameras.main.flash(260, 220, 205, 140, false);
+      this.cameras.main.shake(420, 0.003);
+      this.time.delayedCall(1550, () => this.revealAptitude());
     });
   }
 
@@ -463,11 +585,12 @@ export class OpeningScene extends Phaser.Scene {
       this.player.initialAttributes[attribute] = this.player.attributes[attribute];
     }
     this.saveGame();
-    this.text(270, 95, "石光入體", 42);
+    this.text(270, 95, "靈根顯現", 42);
     this.text(270, 150, "你的靈根逐漸顯現", 21, "#58746e");
     this.text(270, 235, ROOT_LABELS[this.player.root], 35, "#9b762c");
+    this.text(270, 285, `「${ROOT_REVELATIONS[this.player.root]}」`, 18, "#526f69");
     ATTRIBUTES.forEach((attribute, index) => {
-      const y = 335 + index * 80;
+      const y = 370 + index * 67;
       this.text(185, y, ATTRIBUTE_LABELS[attribute], 23);
       this.text(360, y, String(this.player.attributes[attribute]), 28, "#487a70");
     });
@@ -485,23 +608,27 @@ export class OpeningScene extends Phaser.Scene {
       : this.player.realm === "qi"
       ? REALMS.qi.cultivation[Math.min(this.player.level, 8)]
       : 100;
-    this.text(270, 80, this.player.realm === "foundation" ? "外門修行" : "雜役差事", 40);
-    this.text(270, 130, `修為 ${this.player.cultivation} / ${targetCultivation}`, 22, "#54736c");
-    const tasks = ["砍竹", "挑水", "顧藥園", "參悟心法"];
+    this.text(270, 64, "修行安排", 38);
+    this.text(270, 112, `入門第 ${this.player.sectDay} 日 · ${this.timeLabel()}`, 20, "#58746e");
+    this.text(270, 152, `修為 ${this.player.cultivation} / ${targetCultivation}`, 22, "#54736c");
+    const tasks = this.player.realm === "uninitiated"
+      ? ["砍竹", "參悟心法"]
+      : this.player.breathingTutorialComplete
+      ? ["砍竹", "挑水", "顧藥園", "參悟心法", "吐納"]
+      : ["砍竹", "參悟心法"];
     tasks.forEach((task, index) => {
       const x = index % 2 === 0 ? 155 : 385;
-      const y = 300 + Math.floor(index / 2) * 230;
-      const card = this.add.rectangle(x, y, 190, 170, 0xf8f4e9, 0.95)
+      const y = 255 + Math.floor(index / 2) * 175;
+      const card = this.add.rectangle(x, y, 190, 130, 0xf8f4e9, 0.95)
         .setStrokeStyle(3, COLORS.jade, 0.75)
         .setInteractive({ useHandCursor: true });
       this.layer.add(card);
-      this.text(x, y - 25, task, 28);
-      this.text(x, y + 30, "點擊開始", 17, "#66817c");
+      this.text(x, y, task, 28);
       card.on("pointerup", () => this.playTask(task));
     });
     if (this.player.cultivation >= targetCultivation) {
       if (this.player.realm === "uninitiated") {
-        this.button(270, 800, "立即頓悟", () => this.showInsight());
+        this.button(270, 800, "引氣入體", () => this.showInsight());
       } else {
         if (this.player.realm === "foundation") {
           if (this.player.level < 9) this.button(270, 800, `挑戰筑基${this.player.level + 1}層`, () => this.showFoundationLevelBreakthrough());
@@ -513,7 +640,7 @@ export class OpeningScene extends Phaser.Scene {
         }
       }
     } else {
-      this.text(270, 790, "完成差事，熟悉天地靈機", 20, "#66817c");
+      this.text(270, 790, "完成修行，感應天地靈機", 20, "#66817c");
     }
     if (this.player.realm !== "uninitiated") {
       this.text(270, 880, "返回主介面", 18, "#58746e").setInteractive({ useHandCursor: true })
@@ -522,6 +649,7 @@ export class OpeningScene extends Phaser.Scene {
   }
 
   private playTask(task: string) {
+    if (task === "吐納") return this.playBreathingTask(false);
     if (task === "挑水") return this.playWaterTask();
     if (task === "顧藥園") return this.playHerbTask();
     if (task === "參悟心法") return this.playMantraTask();
@@ -537,9 +665,29 @@ export class OpeningScene extends Phaser.Scene {
   private grantTaskCultivation(task: string, score: number) {
     const normalizedScore = Phaser.Math.Clamp(Math.ceil(score), 0, 100);
     const gain = Math.ceil(12 + normalizedScore * 0.36);
-    this.player.cultivation = Math.min(this.cultivationTarget(), this.player.cultivation + gain);
+    const cap = this.player.realm === "qi" ? REALMS.qi.cultivation[8] : this.cultivationTarget();
+    this.player.cultivation = Math.min(cap, this.player.cultivation + gain);
+    this.recordActivity(task, gain);
     this.saveGame();
     this.showTaskResult(task, gain, normalizedScore);
+  }
+
+  private timeLabel() {
+    return ["卯時（早上）", "午時（中午）", "酉時（晚上）"][this.player.timeSlot] ?? "卯時（早上）";
+  }
+
+  private recordActivity(task: string, cultivation: number) {
+    const current = this.player.activityStats[task] ?? { count: 0, cultivation: 0 };
+    this.player.activityStats[task] = {
+      count: current.count + 1,
+      cultivation: current.cultivation + cultivation,
+    };
+    if (this.player.timeSlot >= 2) {
+      this.player.timeSlot = 0;
+      this.player.sectDay += 1;
+    } else {
+      this.player.timeSlot += 1;
+    }
   }
 
   private playBambooTask() {
@@ -820,34 +968,67 @@ export class OpeningScene extends Phaser.Scene {
       挑水: "桶中竟混入一滴靈泉。",
       顧藥園: "你認出一株剛成熟的凝露草。",
       參悟心法: "一句晦澀口訣忽然通順。",
+      吐納: "呼吸漸穩，靈氣沿經脈緩緩流轉。",
     };
     this.text(270, 350, eventLines[task], 22);
     this.text(270, 430, `操作分數 ${score}`, 24, "#58746e");
-    this.text(270, 495, `修為 +${gain}`, 32, "#9b762c");
+    this.text(270, 475, `修為 +${gain}`, 32, "#9b762c");
+    this.text(270, 525, "靈氣有所感應", 22, "#54736c");
+    const progress = Math.min(100, Math.floor((this.player.cultivation / this.cultivationTarget()) * 100));
+    const progressLabel = this.player.realm === "uninitiated" ? "距離引氣入體" : "當前境界修為";
+    this.text(270, 570, `${progressLabel}：${progress}%`, 22, "#54736c");
     this.button(270, 650, this.player.cultivation >= this.cultivationTarget() ? "修為已滿" : "繼續", () => this.showActivities());
   }
 
   private showInsight() {
     this.reset();
     this.text(270, 95, "引氣入體", 42);
-    this.text(270, 150, "依序點擊亮起的靈氣", 21, "#58746e");
-    const positions = [130, 270, 410];
-    let step = 0;
-    const orbs = positions.map((x) => {
-      const orb = this.add.circle(x, 500, 54, 0x7da79d, 0.25).setInteractive({ useHandCursor: true });
-      this.layer.add(orb);
-      return orb;
+    this.text(270, 150, "第一步 · 按住吸收靈氣", 21, "#58746e");
+    const orb = this.add.circle(270, 470, 70, COLORS.jade, 0.75).setInteractive({ useHandCursor: true });
+    const ring = this.add.circle(270, 470, 105).setStrokeStyle(4, COLORS.gold, 0.7);
+    this.layer.add([ring, orb]);
+    let holding = false;
+    let heldFor = 0;
+    orb.on("pointerdown", () => { holding = true; });
+    this.input.on("pointerup", () => { holding = false; heldFor = 0; orb.setScale(1); });
+    this.time.addEvent({ delay: 50, loop: true, callback: () => {
+      if (!holding) return;
+      heldFor += 50;
+      orb.setScale(1 + heldFor / 2200);
+      if (heldFor >= 900) this.showInsightDrag();
+    }});
+    this.text(270, 690, "長按光團，讓靈氣聚於掌心", 19, "#66817c");
+  }
+
+  private showInsightDrag() {
+    this.reset();
+    this.text(270, 95, "引氣入體", 42);
+    this.text(270, 150, "第二步 · 拖曳靈氣進入丹田", 21, "#58746e");
+    const orb = this.add.circle(270, 300, 48, COLORS.gold, 0.9).setInteractive({ draggable: true, useHandCursor: true });
+    const dantian = this.add.circle(270, 650, 82, COLORS.jade, 0.18).setStrokeStyle(4, COLORS.jade, 0.9);
+    this.layer.add([dantian, orb]);
+    this.input.setDraggable(orb);
+    orb.on("drag", (_pointer: Phaser.Input.Pointer, x: number, y: number) => orb.setPosition(x, y));
+    orb.on("dragend", () => {
+      if (Phaser.Math.Distance.Between(orb.x, orb.y, dantian.x, dantian.y) < 95) this.showInsightTiming();
+      else orb.setPosition(270, 300);
     });
-    const refresh = () => orbs.forEach((orb, index) => {
-      orb.setFillStyle(index === step ? COLORS.gold : COLORS.jade, index === step ? 1 : 0.25);
+    this.text(270, 780, "將光團拖入下方丹田", 19, "#66817c");
+  }
+
+  private showInsightTiming() {
+    this.reset();
+    this.text(270, 95, "引氣入體", 42);
+    this.text(270, 150, "第三步 · 光圈重合時點擊", 21, "#58746e");
+    const target = this.add.circle(270, 470, 72, COLORS.jade, 0.2).setStrokeStyle(5, COLORS.gold, 0.9);
+    const pulse = this.add.circle(270, 470, 170).setStrokeStyle(6, COLORS.jade, 0.9).setInteractive({ useHandCursor: true });
+    this.layer.add([target, pulse]);
+    this.tweens.add({ targets: pulse, scale: 0.42, duration: 1500, repeat: -1 });
+    pulse.on("pointerup", () => {
+      const closeEnough = Math.abs(pulse.displayWidth - target.displayWidth) < 90;
+      if (closeEnough) this.enterQiOne();
+      else this.text(270, 720, "莫急，待光圈再次重合", 20, "#8b4a43");
     });
-    orbs.forEach((orb, index) => orb.on("pointerup", () => {
-      if (index !== step) return;
-      step += 1;
-      if (step === 3) this.enterQiOne();
-      else refresh();
-    }));
-    refresh();
   }
 
   private enterQiOne() {
@@ -874,7 +1055,8 @@ export class OpeningScene extends Phaser.Scene {
     ATTRIBUTES.forEach((attribute, index) => {
       this.text(270, 355 + index * 62, `${ATTRIBUTE_LABELS[attribute]}  ${this.player.attributes[attribute]}`, 24);
     });
-    this.button(270, 700, "進入宗門", () => this.showMuQingli());
+    this.text(270, 650, "靈氣流轉，衣袂間泛起淡淡靈光", 18, "#54736c");
+    this.button(270, 755, "接受師姐指引", () => this.showMuQingli());
   }
 
   private showMuQingli() {
@@ -884,9 +1066,76 @@ export class OpeningScene extends Phaser.Scene {
     const hair = this.add.arc(270, 265, 200, 175, 365, false, 0x182725);
     this.layer.add([portrait, hair]);
     this.text(270, 445, "慕清璃", 28, "#496b79");
-    this.text(270, 510, "「氣息太散。」", 27);
-    this.text(270, 565, "「照做。」", 27);
-    this.button(270, 690, "一 · 二 · 三", () => this.showMainMenu());
+    this.text(270, 505, "「既已引氣入體，師姐再教你一些基礎。」", 21);
+    this.text(270, 560, "「盤膝，吐納。」", 25);
+    this.text(270, 615, "「感受天地靈氣如何流轉。」", 21);
+    this.button(270, 735, "開始吐納", () => this.playBreathingTask(true));
+  }
+
+  private playBreathingTask(tutorial: boolean) {
+    this.reset();
+    this.text(270, 72, tutorial ? "吐納教學" : "吐納", 40);
+    this.text(270, 125, "光團收縮時按住吸氣，放大時放開吐氣", 18, "#58746e");
+    const aura = this.add.circle(270, 430, 105, COLORS.jade, 0.55).setStrokeStyle(5, COLORS.gold, 0.75);
+    const inner = this.add.circle(270, 430, 52, 0xe8fff7, 0.5);
+    const zone = this.add.zone(270, 430, 360, 360).setInteractive({ useHandCursor: true });
+    this.layer.add([aura, inner, zone]);
+    let elapsed = 0;
+    let holding = false;
+    let breaths = 0;
+    let goodBreaths = 0;
+    let phase = 0;
+    const status = this.text(270, 650, "跟隨靈氣的呼吸", 22, "#54736c");
+    const timerLabel = this.text(270, 715, "剩餘 30 秒", 20, "#58746e");
+    zone.on("pointerdown", () => {
+      holding = true;
+      status.setText(phase < 0.55 ? "吸氣 · 靈氣入體" : "太快，靈氣散開");
+    });
+    this.input.on("pointerup", () => {
+      if (!holding) return;
+      holding = false;
+      breaths += 1;
+      if (phase >= 0.45) {
+        goodBreaths += 1;
+        status.setText("吐氣 · 靈氣歸丹田");
+      } else {
+        status.setText("太慢，靈氣正在外洩");
+      }
+    });
+    this.time.addEvent({ delay: 50, loop: true, callback: () => {
+      elapsed += 50;
+      phase = (Math.sin((elapsed / 2200) * Math.PI * 2 - Math.PI / 2) + 1) / 2;
+      const scale = 0.72 + phase * 0.42;
+      aura.setScale(scale);
+      inner.setScale(0.85 + phase * 0.25);
+      const seconds = Math.max(0, 30 - Math.floor(elapsed / 1000));
+      timerLabel.setText(`剩餘 ${seconds} 秒 · 穩定吐納 ${goodBreaths} 次`);
+      if (elapsed >= 30000) this.finishBreathingTask(tutorial, breaths, goodBreaths);
+    }});
+  }
+
+  private finishBreathingTask(tutorial: boolean, breaths: number, goodBreaths: number) {
+    const score = breaths === 0 ? 0 : Math.round((goodBreaths / breaths) * 100);
+    if (!tutorial) {
+      this.grantTaskCultivation("吐納", score);
+      return;
+    }
+    if (goodBreaths < 4) {
+      this.reset();
+      this.text(270, 180, `${this.player.name}：「師姐，我總是聚不起靈氣……」`, 22);
+      this.text(270, 350, "慕清璃：「心浮，則氣散。」", 25, "#496b79");
+      this.text(270, 425, "「再來。」", 30, "#496b79");
+      this.button(270, 650, "重新吐納", () => this.playBreathingTask(true));
+      return;
+    }
+    this.player.cultivation = Math.max(this.player.cultivation, REALMS.qi.cultivation[1]);
+    this.saveGame();
+    this.reset();
+    this.text(270, 180, "慕清璃：「尚可。」", 31, "#496b79");
+    this.text(270, 310, "本次引導修為已滿", 27, "#9b762c");
+    this.text(270, 375, `修為 ${this.player.cultivation} / ${REALMS.qi.cultivation[1]}`, 23, "#54736c");
+    this.text(270, 470, "「完成一次吐納，嘗試突破練氣二層。」", 21);
+    this.button(270, 650, "突破練氣二層", () => this.showQiBreakthrough(true));
   }
 
   private showMainMenu() {
@@ -910,6 +1159,7 @@ export class OpeningScene extends Phaser.Scene {
       ? (this.player.level < 9 ? `下一目標：修至練氣${this.player.level + 1}層` : "下一目標：突破筑基")
       : (this.player.level < 9 ? `下一目標：修至筑基${this.player.level + 1}層` : "下一目標：迎戰九重雷劫");
     this.text(270, 820, nextGoal, 24, "#9b762c");
+    this.button(1070, 615, "場景移動", () => this.showSceneTravelLocked(), 210);
     const destroy = this.add.text(270, 902, "道心崩了", {
       fontFamily: '"Microsoft JhengHei", sans-serif',
       fontSize: "17px",
@@ -917,6 +1167,22 @@ export class OpeningScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     destroy.on("pointerup", () => this.showDestroyConfirmation());
     this.layer.add(destroy);
+  }
+
+  private showSceneTravelLocked() {
+    const panel = this.add.graphics().setDepth(900);
+    panel.fillStyle(0xf3eee1, 0.97).fillRoundedRect(775, 500, 360, 76, 14);
+    panel.lineStyle(2, COLORS.ink, 0.65).strokeRoundedRect(775, 500, 360, 76, 14);
+    const message = this.add.text(955, 538, "宗門權限不足，無法前往", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "22px",
+      color: "#18312f",
+    }).setOrigin(0.5).setDepth(901);
+    this.layer.add([panel, message]);
+    this.tweens.add({ targets: [panel, message], alpha: 0, duration: 450, delay: 1500, onComplete: () => {
+      panel.destroy();
+      message.destroy();
+    }});
   }
 
   private showStoneStatus() {
@@ -946,11 +1212,29 @@ export class OpeningScene extends Phaser.Scene {
     ATTRIBUTES.forEach((attribute, index) => {
       this.text(270, 300 + index * 74, `${ATTRIBUTE_LABELS[attribute]}  ${this.player.attributes[attribute]}`, 26);
     });
-    this.text(270, 640, `當前修為 ${this.player.cultivation}`, 23);
-    this.button(270, 760, "返回", () => this.showMainMenu(), 240);
+    this.text(270, 620, `入門第 ${this.player.sectDay} 日 · ${this.timeLabel()}`, 20, "#58746e");
+    this.text(270, 660, `累積修為 ${this.player.cultivation}`, 23);
+    this.button(270, 750, "修行紀錄", () => this.showActivityHistory(), 240);
+    this.button(270, 850, "返回", () => this.showMainMenu(), 240);
   }
 
-  private showQiBreakthrough() {
+  private showActivityHistory() {
+    this.reset();
+    this.text(270, 65, "修行紀錄", 38);
+    this.text(270, 115, `${this.player.name} · ${this.player.identity}`, 21, "#58746e");
+    this.text(270, 155, `入門第 ${this.player.sectDay} 日 · ${this.timeLabel()}`, 19, "#58746e");
+    const realmLabel = this.player.realm === "foundation" ? "筑基境" : this.player.realm === "qi" ? "練氣境" : "尚未入境";
+    this.text(270, 205, `${realmLabel}　${this.player.level > 0 ? `第 ${this.player.level} 層` : ""}`, 25, "#9b762c");
+    this.text(270, 245, `累積修為 ${this.player.cultivation}`, 22, "#54736c");
+    const activityOrder = ["砍竹", "挑水", "顧藥園", "參悟心法", "吐納", "經脈運氣", "閉關吐納"];
+    activityOrder.forEach((task, index) => {
+      const stats = this.player.activityStats[task] ?? { count: 0, cultivation: 0 };
+      this.text(270, 315 + index * 58, `${task}　${stats.count} 次　累積修為 ${stats.cultivation}`, 19);
+    });
+    this.button(270, 850, "返回角色狀態", () => this.showCharacterStatus(), 280);
+  }
+
+  private showQiBreakthrough(tutorial = false) {
     this.reset();
     const targetLevel = this.player.level + 1;
     this.text(270, 80, `突破練氣${targetLevel}層`, 38);
@@ -969,12 +1253,13 @@ export class OpeningScene extends Phaser.Scene {
       rounds += 1;
       if (rounds < 3) return;
       settle.disableInteractive();
-      this.resolveQiBreakthrough(targetLevel, Math.ceil(scoreTotal / 3));
+      this.resolveQiBreakthrough(targetLevel, Math.ceil(scoreTotal / 3), tutorial);
     });
     this.text(270, 690, "判定寬鬆，失誤也可繼續完成", 17, "#66817c");
   }
 
-  private resolveQiBreakthrough(targetLevel: number, score: number) {
+  private resolveQiBreakthrough(targetLevel: number, score: number, tutorial = false) {
+    if (tutorial) score = Math.max(50, score);
     if (score < 50) {
       const lost = Phaser.Math.Between(1, 3);
       this.player.level = Math.max(1, this.player.level - lost);
@@ -983,16 +1268,72 @@ export class OpeningScene extends Phaser.Scene {
       this.showBreakthroughResult(false, `氣息潰散，跌回練氣${this.player.level}層`);
       return;
     }
+    const gains = { spirit: 0, bone: 0, body: 0, sense: 0 } as Record<Attribute, number>;
     for (const attribute of ATTRIBUTES) {
       const [min, max] = REALMS.qi.rollRanges[targetLevel <= 3 ? 0 : targetLevel <= 6 ? 1 : 2];
       const gain = effectiveGrowth(Phaser.Math.Between(min, max), ROOT_MULTIPLIERS[this.player.root]);
       const cap = qiComponentCapAtLevel(attribute, this.player.initialAttributes[attribute], targetLevel);
-      this.player.attributes[attribute] = Math.min(cap, this.player.attributes[attribute] + gain);
+      const before = this.player.attributes[attribute];
+      this.player.attributes[attribute] = Math.min(cap, before + gain);
+      gains[attribute] = this.player.attributes[attribute] - before;
     }
     this.player.level = targetLevel;
-    this.player.cultivation = 0;
+    if (!tutorial) this.player.cultivation = Math.max(this.player.cultivation, REALMS.qi.cultivation[targetLevel - 1]);
+    this.player.breathingTutorialComplete ||= tutorial;
     this.saveGame();
-    this.showBreakthroughResult(true, `練氣${targetLevel}層`);
+    if (tutorial) this.showTutorialBreakthroughResult(gains);
+    else this.showBreakthroughResult(true, `練氣${targetLevel}層`);
+  }
+
+  private showTutorialBreakthroughResult(gains: Record<Attribute, number>) {
+    this.reset();
+    this.text(270, 95, "練氣一層 → 練氣二層", 34, "#9b762c");
+    this.text(270, 165, "成長結果", 27);
+    ATTRIBUTES.forEach((attribute, index) => {
+      this.text(270, 255 + index * 62, `${ATTRIBUTE_LABELS[attribute]} +${gains[attribute]}`, 25, "#47786e");
+    });
+    this.text(270, 555, "不同靈根僅影響角色成長速度，\n但不會增加遊戲基本操作難度。", 20, "#58746e");
+    this.button(270, 735, "聽師姐講解", () => this.showFoundationLesson());
+  }
+
+  private showFoundationLesson() {
+    this.reset();
+    this.text(270, 90, "慕清璃 · 境界指引", 34, "#496b79");
+    this.text(270, 255, "「小境界的突破，不過是靈氣累積。」", 24);
+    this.text(270, 355, "「真正的考驗，在練氣九層之後。」", 24);
+    this.text(270, 455, "「現在，閉上眼睛。」", 28, "#496b79");
+    this.button(270, 690, "閉上眼睛", () => this.showFoundationVision());
+  }
+
+  private showFoundationVision() {
+    this.reset();
+    const darkness = this.add.rectangle(270, 480, 540, 960, 0x07100f, 0.96);
+    this.layer.add(darkness);
+    this.text(270, 115, "神識所見", 32, "#d6b866");
+    this.text(270, 205, "練氣九層之後，便是築基。\n築基丹可提升跨境成功機率。", 22, "#e8e0c8");
+    const panel = this.add.graphics();
+    panel.fillStyle(0xf3eddf, 0.94).fillRoundedRect(55, 335, 430, 300, 18);
+    panel.lineStyle(3, COLORS.gold, 0.72).strokeRoundedRect(55, 335, 430, 300, 18);
+    panel.lineStyle(2, COLORS.jade, 0.55).lineBetween(270, 365, 270, 605);
+    this.layer.add(panel);
+    this.text(162, 390, "突破成功", 25, "#47786e");
+    this.text(162, 485, "角色氣息與服裝\n進入新的境界", 19);
+    this.text(378, 390, "突破失敗", 25, "#8b4a43");
+    this.text(378, 485, "境界跌落\n既有素質保留", 19);
+    this.text(270, 665, "跨境必須親自突破；丹藥只提高成功機率。", 18, "#e8e0c8");
+    this.button(270, 790, "睜開眼睛", () => this.finishFoundationLesson());
+  }
+
+  private finishFoundationLesson() {
+    this.player.foundationLessonSeen = true;
+    this.saveGame();
+    this.reset();
+    this.text(270, 180, `${this.player.name}：「剛才那是……」`, 24);
+    this.text(270, 350, "慕清璃：", 25, "#496b79");
+    this.text(270, 420, "「等你走到那一步，自然會明白。」", 23);
+    this.text(270, 480, "「去修練吧。」", 27, "#496b79");
+    this.text(270, 560, "（不再解釋。）", 18, "#66817c");
+    this.button(270, 720, "開放自由行動", () => this.showMainMenu());
   }
 
   private showBreakthroughResult(success: boolean, result: string) {
@@ -1043,7 +1384,7 @@ export class OpeningScene extends Phaser.Scene {
     this.text(270, 285, `筑基丹持有：${this.player.foundationPills}`, 22);
     this.button(270, 420, "裸衝", () => this.showFoundationMiniGame(false), 300);
     const pillButton = this.button(270, 525, "服丹突破（有效分數 +15）", () => this.showFoundationMiniGame(true), 390);
-    if (this.player.foundationPills <= 0) pillButton.disableInteractive().setAlpha(0.45);
+    if (this.player.foundationPills <= 0) pillButton.disableInteractive();
     this.button(270, 680, "主動墮境重修", () => {
       this.player.level = Phaser.Math.Between(6, 8);
       this.player.cultivation = 0;
@@ -1291,3 +1632,4 @@ export class OpeningScene extends Phaser.Scene {
     this.button(270, 760, "返回", () => this.showMainMenu(), 240);
   }
 }
+

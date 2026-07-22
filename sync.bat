@@ -3,7 +3,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
 set "PROJECT_NAME=NTSI"
-set "REPO_URL=https://github.com/index7777/NTSI.git"
+set "REPO_URL=https://github.com/index7777/ntsi"
 set "BRANCH=main"
 
 :menu
@@ -37,7 +37,7 @@ goto menu
 where git >nul 2>nul || (echo [ERROR] Git is not available in PATH.& exit /b 1)
 where npm >nul 2>nul || (echo [ERROR] npm is not available in PATH.& exit /b 1)
 if not exist "game\package.json" (echo [ERROR] game\package.json was not found.& exit /b 1)
-if not exist "HANDOFF.md" (echo [ERROR] HANDOFF.md was not found.& exit /b 1)
+if not exist "docs\production\HANDOFF.md" (echo [ERROR] docs\production\HANDOFF.md was not found.& exit /b 1)
 exit /b 0
 
 :ensure_repo
@@ -126,3 +126,4 @@ echo [ERROR] Git or npm operation failed.
 echo If GitHub requests access, sign in through Git Credential Manager.
 pause
 goto menu
+

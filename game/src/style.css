@@ -23,8 +23,8 @@ html, body, #game-shell {
 }
 
 #game {
-  width: min(100vw, calc(100vh * 9 / 16));
-  height: min(100vh, calc(100vw * 16 / 9));
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
   box-shadow: 0 0 40px rgb(24 49 47 / 24%);
 }
 
@@ -39,6 +39,20 @@ canvas { display: block; }
   border-radius: 16px;
   background: rgb(248 244 233 / 96%);
   box-shadow: 0 12px 28px rgb(24 49 47 / 18%);
+}
+
+@media (orientation: portrait) {
+  #game-shell::before {
+    content: "請將裝置旋轉為橫向";
+    position: fixed;
+    z-index: 10;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #18312f;
+    background: #f3eee1;
+    font-size: clamp(20px, 6vw, 34px);
+  }
 }
 
 .name-entry input {
