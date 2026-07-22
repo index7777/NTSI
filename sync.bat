@@ -1,89 +1,128 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
+set "PROJECT_NAME=NTSI"
 set "REPO_URL=https://github.com/index7777/NTSI.git"
 set "BRANCH=main"
 
-where git >nul 2>nul
-if errorlevel 1 (
-  echo [ERROR] Git is not installed or not available in PATH.
-  exit /b 1
-)
+:menu
+cls
+echo =====================================================
+echo   NTSI - A/B Computer Sync
+echo   Folder: %CD%
+echo   Remote: %REPO_URL%
+echo =====================================================
+echo   FIRST COMPUTER: use [2] to make the first push.
+echo   OTHER COMPUTER: clone the repo once, then use [1].
+echo =====================================================
+echo   [1] Start work  - pull latest, then install packages
+echo   [2] Ending work - build, commit and push changes
+echo   [3] Status      - branch, changes, Node, node_modules
+echo   [4] Install dependencies only
+echo   [0] Exit
+echo =====================================================
+set "CHOICE="
+set /p "CHOICE=Choose: "
+if "%CHOICE%"=="1" goto start_work
+if "%CHOICE%"=="2" goto finish_work
+if "%CHOICE%"=="3" goto status
+if "%CHOICE%"=="4" goto install
+if "%CHOICE%"=="0" exit /b 0
+echo Invalid choice.
+pause
+goto menu
 
-if not exist "game\package.json" (
-  echo [ERROR] game\package.json was not found. Run this file from the NTSI project root.
-  exit /b 1
-)
+:preflight
+where git >nul 2>nul || (echo [ERROR] Git is not available in PATH.& exit /b 1)
+where npm >nul 2>nul || (echo [ERROR] npm is not available in PATH.& exit /b 1)
+if not exist "game\package.json" (echo [ERROR] game\package.json was not found.& exit /b 1)
+if not exist "HANDOFF.md" (echo [ERROR] HANDOFF.md was not found.& exit /b 1)
+exit /b 0
 
-if not exist "HANDOFF.md" (
-  echo [ERROR] HANDOFF.md was not found. Update the handoff document before syncing.
-  exit /b 1
-)
-
-echo [1/6] Building the game...
-pushd "game"
-call npm run build
-if errorlevel 1 (
-  popd
-  echo [ERROR] Build failed. Nothing was committed or pushed.
-  exit /b 1
-)
-popd
-
-echo [2/6] Checking the local Git repository...
+:ensure_repo
 if not exist ".git" (
-  git init -b "%BRANCH%"
-  if errorlevel 1 exit /b 1
+  git init -b "%BRANCH%" || exit /b 1
 )
-
 git remote get-url origin >nul 2>nul
 if errorlevel 1 (
-  git remote add origin "%REPO_URL%"
+  git remote add origin "%REPO_URL%" || exit /b 1
 ) else (
   for /f "delims=" %%R in ('git remote get-url origin') do set "CURRENT_ORIGIN=%%R"
   if /I not "!CURRENT_ORIGIN!"=="%REPO_URL%" (
-    echo [ERROR] The origin remote is not %REPO_URL%
-    echo Current origin: !CURRENT_ORIGIN!
-    echo Refusing to push to an unexpected repository.
+    echo [ERROR] Unexpected origin: !CURRENT_ORIGIN!
+    echo Expected: %REPO_URL%
     exit /b 1
   )
 )
+exit /b 0
 
-echo [3/6] Staging project changes...
-git add -A
+:start_work
+call :preflight || goto failed
+call :ensure_repo || goto failed
+git fetch origin || goto failed
+git ls-remote --exit-code --heads origin "%BRANCH%" >nul 2>nul
+if not errorlevel 1 git pull --rebase origin "%BRANCH%" || goto failed
+call :install_core || goto failed
+echo.
+echo Start-work sync completed successfully.
+pause
+goto menu
 
+:finish_work
+call :preflight || goto failed
+call :ensure_repo || goto failed
+pushd "game"
+call npm run build
+if errorlevel 1 (popd& goto failed)
+popd
+git add -A || goto failed
 git diff --cached --quiet
 if errorlevel 1 (
-  set "COMMIT_MESSAGE=%*"
-  if not defined COMMIT_MESSAGE set "COMMIT_MESSAGE=Sync NTSI project updates"
-  echo [4/6] Creating commit: !COMMIT_MESSAGE!
-  git commit -m "!COMMIT_MESSAGE!"
-  if errorlevel 1 (
-    echo [ERROR] Commit failed. Configure git user.name and user.email if requested above.
-    exit /b 1
-  )
+  git commit -m "Sync NTSI project updates" || goto failed
 ) else (
-  echo [4/6] No new local changes to commit.
+  echo No new local changes to commit.
 )
-
-echo [5/6] Checking remote updates...
 git ls-remote --exit-code --heads origin "%BRANCH%" >nul 2>nul
-if not errorlevel 1 (
-  git pull --rebase origin "%BRANCH%"
-  if errorlevel 1 (
-    echo [ERROR] Pull/rebase failed. Resolve the reported conflict before pushing.
-    exit /b 1
-  )
-)
-
-echo [6/6] Pushing to %REPO_URL%...
-git push -u origin "%BRANCH%"
-if errorlevel 1 (
-  echo [ERROR] Push failed. Check GitHub authentication and repository access.
-  exit /b 1
-)
-
+if not errorlevel 1 git pull --rebase origin "%BRANCH%" || goto failed
+git push -u origin "%BRANCH%" || goto failed
 echo.
-echo Sync completed successfully.
+echo Ending-work sync completed successfully.
+pause
+goto menu
+
+:status
+call :preflight || goto failed
+call :ensure_repo || goto failed
+echo.
+git status --short --branch
+echo.
+git remote -v
+echo.
+node --version
+npm --version
+if exist "game\node_modules" (echo node_modules: installed) else (echo node_modules: missing)
+pause
+goto menu
+
+:install
+call :preflight || goto failed
+call :install_core || goto failed
+echo Dependencies installed successfully.
+pause
+goto menu
+
+:install_core
+pushd "game"
+if exist "package-lock.json" (call npm ci) else (call npm install)
+set "INSTALL_RESULT=!ERRORLEVEL!"
+popd
+if not "!INSTALL_RESULT!"=="0" exit /b 1
 exit /b 0
+
+:failed
+echo.
+echo [ERROR] Git or npm operation failed.
+echo If GitHub requests access, sign in through Git Credential Manager.
+pause
+goto menu
