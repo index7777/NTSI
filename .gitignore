@@ -1,0 +1,27 @@
+# Dependencies and build output
+game/node_modules/
+game/dist/
+
+# Local caches and logs
+.cache/
+.vite/
+*.log
+npm-debug.log*
+
+# Local development scratch files
+game/art_work/
+tmp/
+temp/
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
