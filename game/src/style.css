@@ -19,16 +19,24 @@ html, body, #game-shell {
   place-items: center;
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
-  background: radial-gradient(circle at 50% 20%, #f5f2e8 0%, #ccdcd7 60%, #9bb6af 100%);
+  background:
+    linear-gradient(rgb(16 30 28 / 68%), rgb(16 30 28 / 78%)),
+    url("/assets/title/background-landscape-morning-v1.png") center / cover no-repeat;
 }
 
 #game {
   width: min(100vw, calc(100vh * 16 / 9));
   height: min(100vh, calc(100vw * 9 / 16));
-  box-shadow: 0 0 40px rgb(24 49 47 / 24%);
+  box-shadow: 0 0 72px rgb(5 15 14 / 58%);
 }
 
-canvas { display: block; }
+canvas,
+img {
+  display: block;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
 
 .name-entry {
   display: grid;

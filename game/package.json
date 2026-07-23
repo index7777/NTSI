@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "validate:balance": "node scripts/validate-balance.mjs"
+    "validate:balance": "node scripts/validate-balance.mjs",
+    "validate:landscape": "node scripts/validate-landscape-flow.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

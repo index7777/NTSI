@@ -1,9 +1,18 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
-cd /d "%~dp0"
 
-set "PROJECT_NAME=NTSI"
-set "REPO_URL=https://github.com/index7777/ntsi"
+rem Run from a temporary copy so git pull can safely update sync.bat itself.
+if /I not "%~1"=="--runner" (
+  set "SYNC_TEMP=%TEMP%\ntsi-sync-%RANDOM%-%RANDOM%.bat"
+  copy /y "%~f0" "!SYNC_TEMP!" >nul || exit /b 1
+  call "!SYNC_TEMP!" --runner "%~dp0"
+  set "SYNC_RESULT=!ERRORLEVEL!"
+  del /q "!SYNC_TEMP!" >nul 2>nul
+  exit /b !SYNC_RESULT!
+)
+
+cd /d "%~2"
+set "REPO_URL=https://github.com/index7777/NTSI.git"
 set "BRANCH=main"
 
 :menu
@@ -12,9 +21,6 @@ echo =====================================================
 echo   NTSI - A/B Computer Sync
 echo   Folder: %CD%
 echo   Remote: %REPO_URL%
-echo =====================================================
-echo   FIRST COMPUTER: use [2] to make the first push.
-echo   OTHER COMPUTER: clone the repo once, then use [1].
 echo =====================================================
 echo   [1] Start work  - pull latest, then install packages
 echo   [2] Ending work - build, commit and push changes
@@ -29,8 +35,6 @@ if "%CHOICE%"=="2" goto finish_work
 if "%CHOICE%"=="3" goto status
 if "%CHOICE%"=="4" goto install
 if "%CHOICE%"=="0" exit /b 0
-echo Invalid choice.
-pause
 goto menu
 
 :preflight
@@ -41,9 +45,7 @@ if not exist "docs\production\HANDOFF.md" (echo [ERROR] docs\production\HANDOFF.
 exit /b 0
 
 :ensure_repo
-if not exist ".git" (
-  git init -b "%BRANCH%" || exit /b 1
-)
+if not exist ".git" git init -b "%BRANCH%" || exit /b 1
 git remote get-url origin >nul 2>nul
 if errorlevel 1 (
   git remote add origin "%REPO_URL%" || exit /b 1
@@ -62,8 +64,10 @@ call :preflight || goto failed
 call :ensure_repo || goto failed
 git fetch origin || goto failed
 git ls-remote --exit-code --heads origin "%BRANCH%" >nul 2>nul
-if not errorlevel 1 git pull --rebase origin "%BRANCH%" || goto failed
-call :install_core || goto failed
+if errorlevel 1 goto after_pull
+git pull --rebase origin "%BRANCH%" || goto failed
+:after_pull
+call :install_core || goto install_locked
 echo.
 echo Start-work sync completed successfully.
 pause
@@ -78,13 +82,11 @@ if errorlevel 1 (popd& goto failed)
 popd
 git add -A || goto failed
 git diff --cached --quiet
-if errorlevel 1 (
-  git commit -m "Sync NTSI project updates" || goto failed
-) else (
-  echo No new local changes to commit.
-)
+if errorlevel 1 git commit -m "Sync NTSI project updates" || goto failed
 git ls-remote --exit-code --heads origin "%BRANCH%" >nul 2>nul
-if not errorlevel 1 git pull --rebase origin "%BRANCH%" || goto failed
+if errorlevel 1 goto do_push
+git pull --rebase origin "%BRANCH%" || goto failed
+:do_push
 git push -u origin "%BRANCH%" || goto failed
 echo.
 echo Ending-work sync completed successfully.
@@ -94,11 +96,8 @@ goto menu
 :status
 call :preflight || goto failed
 call :ensure_repo || goto failed
-echo.
 git status --short --branch
-echo.
 git remote -v
-echo.
 node --version
 npm --version
 if exist "game\node_modules" (echo node_modules: installed) else (echo node_modules: missing)
@@ -107,23 +106,28 @@ goto menu
 
 :install
 call :preflight || goto failed
-call :install_core || goto failed
+call :install_core || goto install_locked
 echo Dependencies installed successfully.
 pause
 goto menu
 
 :install_core
 pushd "game"
-if exist "package-lock.json" (call npm ci) else (call npm install)
+if exist "node_modules" (call npm install) else if exist "package-lock.json" (call npm ci) else (call npm install)
 set "INSTALL_RESULT=!ERRORLEVEL!"
 popd
 if not "!INSTALL_RESULT!"=="0" exit /b 1
 exit /b 0
 
-:failed
+:install_locked
 echo.
-echo [ERROR] Git or npm operation failed.
-echo If GitHub requests access, sign in through Git Credential Manager.
+echo [ERROR] A game development server is probably using esbuild.exe.
+echo Close the NTSI dev server and its terminal, then choose [4].
 pause
 goto menu
 
+:failed
+echo.
+echo [ERROR] Git or npm operation failed.
+pause
+goto menu
