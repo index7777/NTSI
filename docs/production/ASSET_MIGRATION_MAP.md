@@ -1,4 +1,4 @@
-﻿# 圖片素材搬移對照表
+# 圖片素材搬移對照表
 
 最後更新：2026-07-22
 
@@ -40,6 +40,9 @@
 | game/public/assets/player-female-title-v3.png | art/archive/runtime-player-female-v3.png | 未使用女玩家匯出 v3 | 封存 | 否 |
 | game/public/assets/player-male-title-v1.png | art/archive/runtime-player-male-v1.png | 未使用男玩家匯出 v1 | 封存 | 否 |
 | game/public/assets/player-male-title-v2.png | art/archive/runtime-player-male-v2.png | 未使用男玩家匯出 v2 | 封存 | 否 |
+
+| Kenney Particle Pack / PNG (Transparent) / trace_01.png | game/public/assets/vfx/kenney-particle-pack/ui-light-trace-01.png | 首圖主按鈕柔光粒子線 | CC0執行素材 | 是 |
+| Kenney Particle Pack / PNG (Transparent) / spark_04.png | game/public/assets/vfx/kenney-particle-pack/ui-spark-04.png | 首圖主按鈕向右消散粒子 | CC0執行素材 | 是 |
 
 ## 使用規則
 

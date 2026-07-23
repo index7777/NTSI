@@ -1,0 +1,90 @@
+version: 1
+assets:
+  - id: player_male_mortal_001
+    category: character
+    name: player_male_mortal
+    status: approved
+    canvas: { width: 1024, height: 1536, transparent: true }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: player }
+    references:
+      master: art/active/characters/player-male-master.png
+      style_board: art/references/character-style-board-v1.png
+    view: { projection: 2d, angle: front_three_quarter, facing: right }
+    style: { linework: refined_ink, proportions: original_player_master, lighting: upper_left, shadow: none, palette: white_bluegray_charcoal }
+    identity_locked: [face, hairstyle, outfit, body_proportions, camera, lighting]
+    constraints: [one character only, centered, no text, no cropped edges, no unrequested effects]
+    manual_checks: [face identity, hand anatomy, costume continuity, same-frame scale]
+
+  - id: player_female_mortal_001
+    category: character
+    name: player_female_mortal
+    status: approved
+    canvas: { width: 1024, height: 1536, transparent: true }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: player }
+    references:
+      master: game/public/assets/characters/player-female-v3.png
+      style_board: art/references/character-style-board-v1.png
+    view: { projection: 2d, angle: front_three_quarter, facing: left }
+    style: { linework: refined_ink, proportions: original_player_master, lighting: upper_left, shadow: none, palette: white_bluegray_charcoal }
+    identity_locked: [face, hairstyle, outfit, body_proportions, camera, lighting]
+    constraints: [one character only, centered, no text, no cropped edges, no unrequested effects]
+    manual_checks: [face identity, hand anatomy, costume continuity, same-frame scale]
+
+  - id: sect_steward_portrait_serious_001
+    category: character
+    name: sect_steward_portrait_serious
+    status: planned
+    canvas: { width: 1024, height: 1024, transparent: true }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: dialogue_portrait }
+    references:
+      identity: game/public/assets/characters/sect-elder-v1.png
+      portrait_standard: docs/art/CHARACTER_PORTRAIT_STANDARD.md
+      style_board: art/references/character-style-board-v1.png
+    view: { projection: 2d, angle: front_three_quarter, facing: right }
+    style: { linework: refined_ink, proportions: matching_existing_steward, lighting: upper_right, shadow: none, palette: white_bluegray_charcoal_gold }
+    identity_locked: [face, hairstyle, beard, outfit, body_proportions, camera, lighting]
+    constraints:
+      - one chest-up dialogue portrait only
+      - serious instructive expression
+      - faces inward toward dialogue text
+      - head top and hair ornaments keep at least 64px safe margin
+      - no full body
+      - no name
+      - no text
+      - no frame
+      - no background
+      - no cropped hair
+    manual_checks:
+      - identity matches existing sect steward
+      - face center at 38 to 44 percent canvas height
+      - readable at 176x220 and 112x140
+      - expression reads as firm instruction rather than anger
+
+  - id: outer_sect_steward_portrait_smug_001
+    category: character
+    name: outer_sect_steward_portrait_smug
+    status: planned
+    canvas: { width: 1024, height: 1024, transparent: true }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: dialogue_portrait }
+    references:
+      identity: game/public/assets/characters/outer-sect-steward-v1.png
+      portrait_standard: docs/art/CHARACTER_PORTRAIT_STANDARD.md
+      style_board: art/references/character-style-board-v1.png
+    view: { projection: 2d, angle: front_three_quarter, facing: left }
+    style: { linework: refined_ink, proportions: matching_existing_outer_steward, lighting: upper_left, shadow: none, palette: white_charcoal_muted_gold_jade }
+    identity_locked: [face, hairstyle, hair_ornament, outfit, beard, body_proportions, camera]
+    constraints:
+      - one chest-up dialogue portrait only
+      - mildly smug dismissive expression
+      - faces inward toward dialogue text
+      - no full body
+      - no name
+      - no text
+      - no frame
+      - no background
+      - no cropped hair ornament
+    manual_checks:
+      - identity matches existing outer sect steward
+      - face center at 38 to 44 percent canvas height
+      - readable at 176x220 and 112x140
+      - expression is dismissive rather than comedic

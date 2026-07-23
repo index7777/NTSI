@@ -1,0 +1,140 @@
+version: 1
+assets:
+  - id: scene_title_sect_approach_morning_001
+    category: scene
+    name: title_sect_approach_morning
+    status: approved
+    canvas: { width: 1200, height: 675, transparent: false }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: title }
+    references:
+      active: game/public/assets/title/background-landscape-morning-v1.png
+      ui_master: art/references/ui/game-interface-style-v1.png
+    view: { projection: 2d, angle: cinematic_wide, camera_elevation: 0, facing: forward }
+    style: { linework: refined_ink_watercolor, lighting: morning_upper_right, palette: luminous_bluegray_warm_cream }
+    constraints: [single 16:9 scene, no text, no UI, no buttons, no watermark]
+    manual_checks: [title safe area, right-side action safe area, 960x540 readability, 640x360 readability]
+
+  - id: scene_character_selection_presect_morning_001
+    category: scene
+    name: character_selection_presect_registration_morning
+    status: approved
+    canvas: { width: 1200, height: 675, transparent: false }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: character_selection }
+    references:
+      active: art/active/scenes/character-selection-presect-registration-morning-v1.png
+      male_master: art/active/characters/player-male-master.png
+      female_master: game/public/assets/characters/player-female-v3.png
+    view: { projection: 2d, angle: cinematic_wide, camera_elevation: 0, facing: forward }
+    style: { linework: refined_ink_watercolor, lighting: morning_upper_right, palette: luminous_bluegray_warm_cream }
+    constraints: [single 16:9 scene, no question stone, no text, no UI, no selection effects, no watermark]
+    manual_checks: [pre-sect narrative, male activity clarity, female activity clarity, clickable separation]
+
+  - id: scene_question_stone_courtyard_morning_002
+    category: scene
+    name: question_stone_registration_square_morning
+    status: planned
+    canvas: { width: 1200, height: 675, transparent: false }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: question_stone }
+    references:
+      title_style: game/public/assets/title/background-landscape-morning-v1.png
+      selection_style: art/active/scenes/character-selection-presect-registration-morning-v1.png
+      ui_master: art/references/ui/game-interface-style-v1.png
+    view: { projection: 2d, angle: cinematic_wide, camera_elevation: eye_level, facing: forward }
+    style: { linework: refined_ink_watercolor, lighting: luminous_morning_upper_right, palette: luminous_bluegray_warm_cream }
+    constraints:
+      - single 16:9 sect registration square background
+      - broad public plaza and visible registration circulation
+      - small distant groups of new candidates may appear only outside the foreground interaction and HUD safe areas
+      - empty stone plinth at right-center for a separately composited question stone
+      - clear player staging area at left-center
+      - bottom dialogue HUD safe area
+      - matching perspective and light direction across the whole scene
+      - no question stone
+      - no foreground or featured people
+      - no text
+      - no UI
+      - no effects
+      - no watermark
+    manual_checks:
+      - matches approved title and character-selection rendering style
+      - clearly reads as a public sect registration square where many candidates are received
+      - separate question stone can contact the plinth without a visible seam
+      - 176x220 portrait and bottom dialogue panel remain readable
+      - 960x540 readability
+      - 640x360 readability
+
+  - id: scene_chore_office_morning_002
+    category: scene
+    name: chore_office_morning
+    status: planned
+    canvas: { width: 1200, height: 675, transparent: false }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: chore_office }
+    references:
+      approved_source: "ChatGPT Image 2026年7月23日 下午03_52_34.png"
+      title_style: game/public/assets/title/background-landscape-morning-v1.png
+      ui_master: art/references/ui/game-interface-style-v1.png
+    view: { projection: 2d, angle: cinematic_wide, camera_elevation: eye_level, facing: forward }
+    style: { linework: refined_ink_watercolor, lighting: clear_morning_upper_left, palette: bluegray_wood_warm_cream }
+    constraints:
+      - preserve approved chore-office building and courtyard composition
+      - extend laterally to native 16:9 without stretching
+      - keep foreground story and bottom dialogue HUD safe areas
+      - no featured people
+      - no added text
+      - no UI
+      - no effects
+      - no watermark
+    manual_checks:
+      - office remains immediately readable
+      - background text from approved source is not altered or duplicated
+      - dialogue portrait does not cover the service window
+      - 960x540 readability
+      - 640x360 readability
+
+  - id: scene_bamboo_minigame_morning_001
+    category: scene
+    name: bamboo_minigame_morning
+    status: approved
+    canvas: { width: 1680, height: 945, transparent: false }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: bamboo_minigame }
+    references:
+      approved_source: "ChatGPT Image 2026年7月23日 下午04_46_38.png"
+      gameplay_mockup: "ChatGPT Image 2026年7月23日 下午04_46_44.png"
+    view: { projection: 2d, angle: cinematic_wide, camera_elevation: eye_level, facing: forward }
+    style: { linework: refined_ink_watercolor, lighting: forest_morning_backlight, palette: deep_bamboo_green_warm_mist }
+    constraints:
+      - use approved source as background layer
+      - gameplay mockup is layout and interaction reference only
+      - no baked runtime HUD
+      - no baked player character
+      - no generated replacement UI
+      - no text changes
+    manual_checks:
+      - foreground bamboo target remains visible
+      - player action layer has clear silhouette
+      - top countdown and bottom instruction remain readable
+      - 960x540 readability
+      - 640x360 readability
+
+  - id: scene_heart_manual_room_001
+    category: scene
+    name: heart_manual_room
+    status: approved
+    canvas: { width: 1680, height: 945, transparent: false }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: heart_manual_minigame }
+    references:
+      approved_source: "ChatGPT Image 2026年7月23日 下午05_37_35.png"
+    view: { projection: 2d, angle: centered_open_book, camera_elevation: eye_level, facing: forward }
+    style: { linework: refined_ink_painting, lighting: warm_interior_daylight, palette: parchment_ink_muted_gold }
+    constraints:
+      - preserve approved source without repainting or cropping its content
+      - use as background layer only
+      - no baked runtime HUD
+      - no generated replacement UI
+      - runtime qi flow and hit effects remain separate layers
+      - no stretching
+    manual_checks:
+      - meridian points remain visible
+      - top countdown and bottom instruction remain readable
+      - 960x540 readability
+      - 640x360 readability

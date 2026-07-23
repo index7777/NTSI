@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "validate:balance": "node scripts/validate-balance.mjs",
-    "validate:landscape": "node scripts/validate-landscape-flow.mjs"
+    "validate:landscape": "node scripts/validate-landscape-flow.mjs",
+    "validate:assets": "python ../tools/validate_phaser_assets.py",
+    "manifest:assets": "python ../tools/build_asset_manifest.py"
   },
   "dependencies": {
     "phaser": "^3.90.0"

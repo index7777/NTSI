@@ -1,0 +1,38 @@
+{
+  "asset_id": "ui_title_mechanism_icon_001",
+  "file": "game\\public\\assets\\ui\\title\\mechanism-ink-clean-v3.png",
+  "passed": true,
+  "manual_approval_required": false,
+  "checks": [
+    {
+      "name": "canvas_size",
+      "passed": true,
+      "level": "error",
+      "detail": "actual=(1254, 1254), expected=(1254, 1254)"
+    },
+    {
+      "name": "alpha_channel",
+      "passed": true,
+      "level": "error",
+      "detail": "transparent_required=True, alpha_range=(0, 255)"
+    },
+    {
+      "name": "transparent_corners",
+      "passed": true,
+      "level": "error",
+      "detail": "corner_alpha=[0, 0, 0, 0]"
+    },
+    {
+      "name": "not_cropped",
+      "passed": true,
+      "level": "error",
+      "detail": "alpha_bbox=(125, 67, 1137, 1125), minimum_margin=67"
+    },
+    {
+      "name": "chroma_residue",
+      "passed": true,
+      "level": "error",
+      "detail": "visible_chroma_ratio=0.000000"
+    }
+  ]
+}

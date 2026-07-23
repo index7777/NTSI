@@ -18,6 +18,9 @@
 ## 第三方特效來源
 
 - Kenney Particle Pack 1.1：CC0，可用於商業專案；原始素材與授權保存在 `art/third-party/kenney-particle-pack/`。
-- 執行版本只複製實際使用的光暈、星芒與魔法粒子到 `game/public/assets/vfx/`，並在接入清單記錄原檔對照。
+- 執行版本只複製實際使用的光暈、星芒與魔法粒子到 game/public/assets/vfx/，並在接入清單記錄原檔對照。
+- 首圖主入口光跡：Kenney CC0 	race_01.png → game/public/assets/vfx/kenney-particle-pack/ui-light-trace-01.png。
+- 首圖主入口消散粒子：Kenney CC0 spark_04.png → game/public/assets/vfx/kenney-particle-pack/ui-spark-04.png。
+- 授權依據：rt/third-party/kenney-particle-pack/License.txt；可商用、無須署名。
 
 任何資產改為 approved 前，必須完成原尺寸、960×540、640×360、滑鼠、鍵盤與觸控驗收。

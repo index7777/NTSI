@@ -2,6 +2,8 @@
 
 ## 開始工作前
 
+每次接手、同步、模型切換或上下文壓縮後，先讀取 docs/production/HANDOFF.md 與 docs/production/WORK_QUEUE.md，依工作主檔最早未驗收項目恢復進度。使用者對話中的修改、錯誤回報與指定作法是最新要求，不得以舊文件或舊程式覆蓋。
+
 任何涉及人物、NPC、玩家外觀、服裝、劇情、對話演出、UI 人像或生成美術資產的任務，在分析或動工前必須完整閱讀：
 
 1. `docs/art/CHARACTER_PORTRAIT_STANDARD.md`
@@ -23,6 +25,17 @@
 
 ## 生成與新增美術
 
+- 所有新美術任務必須先讀取 `assets-spec/style-guide.md` 與對應的 `assets-spec/*.yaml`；沒有規格項目時先建立規格，不得直接自由組 Prompt。
+- 圖片生成一律使用 Codex 內建圖片工具；本專案不得建立或呼叫 OpenAI Image API 生成腳本。
+- 生成 Prompt 必須先由 `python tools/compose_prompt.py --spec <spec-file> --id <asset-id>` 組裝，再補入使用者本次明確要求；不得刪除或忽略 YAML 的 reference、identity lock、constraints 與 manual checks。
+- 原始生成結果進 `art/raw`，可供比較的版本進 `art/candidates`；禁止將 raw 或 candidates 直接放入 `game/public/assets`。
+- 每項最多進行三輪生成修正；三輪仍不符時標記阻塞原因，不得無限制盲目重試。
+- 每組候選必須以 `tools/make_contact_sheet.py` 建立 Contact Sheet，供人工驗收。
+- 備選圖只有在使用者確定採用後才可去背；去背使用既有離線工具 `tools/去背工具.html`，結果存入 `art/processed`。
+- processed 資產必須以 `tools/validate_asset.py` 驗證；程式驗證只涵蓋尺寸、Alpha、裁切與色鍵殘留，人物身份、手部、透視、光影、文字與幾何仍需人工驗收。
+- 通過程式驗證且取得使用者定案後，才可移入 `art/active` 並建立 `game/public/assets` 執行副本；不採用版本移入 `art/rejected`，被取代正式版本移入 `art/archive`。
+- Sprite Sheet 只能由已驗證影格建立；呼吸、漂浮、搖擺、霧、雲與一般 UI 回饋優先使用 Phaser Tween、圖層切換、粒子或 Shader，不得要求 AI 自由生成傳統逐幀動畫。
+- runtime 資產新增或改名後必須執行 `npm run manifest:assets` 與 `npm run validate:assets`。
 - 新人物必須先建立完整角色母板、中性立繪、同框比例驗收與 neutral 頭像，再製作其他表情。
 - 新表情只可調整眉、眼、嘴及合理的細微神態；臉型、五官位置、髮型、服裝、鏡頭與裁切必須一致。
 - 圖片內不得生成遊戲文字；繁體中文由遊戲 UI 即時渲染。
@@ -40,7 +53,7 @@
 ## 完成條件
 
 - 未通過母板、透明背景、同框比例、表情一致性及手機顯示驗收的素材，只能標記為候選，不得宣稱正式完成。
-- 修改程式後必須執行 `npm run validate:balance` 與 `npm run build`。
+- 修改程式後必須執行 `npm run validate:balance`、`npm run validate:landscape`、`npm run validate:assets` 與 `npm run build`。
 
 ## 工作進度溝通（所有接手對話強制遵守）
 

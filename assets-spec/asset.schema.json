@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NTSI game asset specification",
+  "type": "object",
+  "required": ["id", "category", "name", "status", "canvas", "style", "constraints"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]+$" },
+    "category": { "enum": ["character", "scene", "activity_card", "ui", "vfx", "prop", "animation"] },
+    "name": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["planned", "raw", "candidate", "processed", "reviewed", "approved", "rejected", "archived"] },
+    "canvas": {
+      "type": "object",
+      "required": ["width", "height", "transparent"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "transparent": { "type": "boolean" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "engine": { "const": "phaser" },
+        "native_viewport": { "const": "1200x675" },
+        "target_scene": { "type": "string" }
+      }
+    },
+    "references": { "type": "object" },
+    "view": { "type": "object" },
+    "style": { "type": "object" },
+    "identity_locked": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "manual_checks": { "type": "array", "items": { "type": "string" } }
+  }
+}

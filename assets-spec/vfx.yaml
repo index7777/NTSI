@@ -1,0 +1,38 @@
+version: 1
+defaults:
+  category: vfx
+  canvas: { width: 1024, height: 1024, transparent: true }
+  runtime: { engine: phaser, native_viewport: 1200x675, target_scene: shared_vfx }
+  style: { linework: soft_particle, lighting: additive, shadow: none, palette: scene_controlled }
+  constraints: [one effect layer only, transparent background, no text, no UI, no hard rectangular edge]
+  manual_checks: [alpha fringe, blend mode preview, low-resolution preview]
+assets:
+  - id: vfx_question_stone_contact_001
+    name: question_stone_contact_sequence_layers
+    status: planned
+    canvas: { width: 1024, height: 1024, transparent: true }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: question_stone }
+    references:
+      stone: prop_question_stone_neutral_002
+      scene: scene_question_stone_courtyard_morning_002
+    style: { linework: soft_spirit_particle, lighting: additive_layered, shadow: none, palette: warm_white_pale_jade }
+    layers:
+      - palm_white_light
+      - contact_bloom
+      - stone_vein_rise
+      - charge_mist
+      - burst_rays
+      - transition_mist
+    constraints:
+      - separate effect layer assets
+      - no circular progress ring
+      - no hand icon
+      - no text
+      - no UI
+      - no hard geometric outline
+      - no black background
+    manual_checks:
+      - sequence reads from palm to contact point to upward stone veins
+      - charge lasts long enough to communicate holding
+      - burst does not obscure the stone silhouette
+      - effects remain readable at 640x360

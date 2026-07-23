@@ -1,0 +1,39 @@
+{
+  "image": "pipeline-sprite-selftest-v1.png",
+  "frames": [
+    {
+      "name": "mechanism-ink-clean-v3",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1254,
+        "h": 1254
+      },
+      "source_size": {
+        "w": 1254,
+        "h": 1254
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    },
+    {
+      "name": "mechanism-ink-clean-v3",
+      "frame": {
+        "x": 1254,
+        "y": 0,
+        "w": 1254,
+        "h": 1254
+      },
+      "source_size": {
+        "w": 1254,
+        "h": 1254
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    }
+  ]
+}

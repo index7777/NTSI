@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>共GO 去背工具 · 洋紅底色鍵去背</title>
+<style>
+  :root { --blue:#0085C7; --green:#00A651; --orange:#FF9900; --slate:#1E293B; --bg:#F0F4F8; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif; background:var(--bg); color:var(--slate); }
+  header { background:var(--slate); color:#fff; padding:16px 20px; }
+  header h1 { margin:0; font-size:18px; }
+  header p { margin:4px 0 0; font-size:12px; color:#9FB3C8; }
+  .wrap { max-width:1100px; margin:0 auto; padding:18px 20px 60px; }
+  .panel { background:#fff; border:1px solid #E2E8F0; border-radius:12px; padding:16px; margin-bottom:16px; }
+  .controls { display:flex; flex-wrap:wrap; gap:18px; align-items:center; }
+  .ctl { display:flex; flex-direction:column; gap:4px; font-size:12px; }
+  .ctl label { color:#64748B; }
+  .row { display:flex; align-items:center; gap:8px; }
+  input[type=range] { width:160px; }
+  .swatch { width:26px; height:26px; border-radius:6px; border:2px solid #CBD5E1; }
+  button { font-family:inherit; cursor:pointer; border:none; border-radius:10px; padding:9px 16px; font-size:13px; font-weight:700; }
+  .btn-primary { background:var(--blue); color:#fff; }
+  .btn-ghost { background:transparent; border:1px solid var(--blue); color:var(--blue); }
+  .btn-sm { padding:6px 12px; font-size:12px; }
+  #drop { border:2px dashed #94A3B8; border-radius:12px; padding:34px; text-align:center; color:#64748B; background:#F8FAFC; cursor:pointer; }
+  #drop.hot { border-color:var(--blue); background:#E6F3FB; color:var(--blue); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
+  .card { background:#fff; border:1px solid #E2E8F0; border-radius:12px; padding:10px; }
+  .card .name { font-size:12px; font-weight:700; margin-bottom:6px; word-break:break-all; }
+  .fnrow { display:flex; align-items:center; gap:4px; margin:8px 0 4px; }
+  .fnrow input { flex:1; min-width:0; font-family:inherit; font-size:12px; padding:6px 8px; border:1px solid #CBD5E1; border-radius:8px; }
+  .fnrow .ext { font-size:12px; color:#94A3B8; }
+  .cardbtns { display:flex; gap:6px; }
+  .btn-x { background:#F1F5F9; color:#64748B; border:1px solid #E2E8F0; }
+  .checker { border-radius:8px; overflow:hidden; background-image:
+      linear-gradient(45deg,#c8ccd2 25%,transparent 25%),linear-gradient(-45deg,#c8ccd2 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#c8ccd2 75%),linear-gradient(-45deg,transparent 75%,#c8ccd2 75%);
+      background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
+  .checker canvas { display:block; width:100%; height:auto; cursor:crosshair; }
+  .card .meta { font-size:11px; color:#94A3B8; margin:6px 0; }
+  .hint { font-size:12px; color:#64748B; line-height:1.7; }
+  code { background:#EEF2F6; padding:1px 5px; border-radius:4px; font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>共GO 去背工具</h1>
+  <p>純離線 · 洋紅(或任意純色)色鍵去背 · 圖片不會上傳到任何地方</p>
+</header>
+<div class="wrap">
+
+  <div class="panel">
+    <div class="controls">
+      <div class="ctl">
+        <label>去背底色(點色塊右邊按鈕可從圖上吸色)</label>
+        <div class="row">
+          <div class="swatch" id="swatch" style="background:#FF00FF"></div>
+          <button class="btn-ghost btn-sm" id="pickBtn">🎯 從圖上吸色:關</button>
+          <button class="btn-ghost btn-sm" id="resetColor">回洋紅</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label>容差 <span id="tolVal">120</span>(越大摳越多)</label>
+        <input type="range" id="tol" min="20" max="240" value="120" />
+      </div>
+      <div class="ctl">
+        <label>邊緣羽化 <span id="featVal">30</span></label>
+        <input type="range" id="feat" min="0" max="120" value="30" />
+      </div>
+      <div class="ctl">
+        <label>去色溢(消粉邊)</label>
+        <div class="row"><input type="checkbox" id="spill" checked /> <span>開啟</span></div>
+      </div>
+      <div class="ctl">
+        <label>&nbsp;</label>
+        <div class="row">
+          <button class="btn-primary" id="dlAll">⬇ 全部下載</button>
+          <button class="btn-ghost" id="clearAll">🗑 清除全部</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div id="drop">把要去背的 PNG 拖進來,或<b>點這裡選檔</b>(可多選)<br><span class="hint">建議:洋紅 <code>#FF00FF</code> 底的圖。背景類(menu-bg / station-bg / result-bg)不用去背,別丟進來。</span>
+      <input type="file" id="file" accept="image/png,image/*" multiple hidden />
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="panel hint">
+    用法:1) 拖圖進來 → 2) 調容差到粉底剛好乾淨、主體不破 → 3) 每張按「下載」或上面「全部下載」。<br>
+    下載的檔名會跟原檔一樣,存到 <code>web-build/assets/</code> 即可(判定特效/NPC 用分開檔名如 <code>fx-perfect.png</code>、<code>npc-backpack.png</code>)。<br>
+    若主體本身有接近洋紅的顏色被摳掉,調小容差,或用「從圖上吸色」點一下實際的底色。
+  </div>
+
+</div>
+<script>
+  const items = [];
+  let key = { r:255, g:0, b:255 };
+  let pickMode = false;
+  const $ = id => document.getElementById(id);
+  const grid = $("grid");
+
+  function hex(c){ return "#" + [c.r,c.g,c.b].map(v=>v.toString(16).padStart(2,"0")).join(""); }
+  function updSwatch(){ $("swatch").style.background = hex(key); }
+
+  $("tol").oninput = e => { $("tolVal").textContent = e.target.value; processAll(); };
+  $("feat").oninput = e => { $("featVal").textContent = e.target.value; processAll(); };
+  $("spill").onchange = processAll;
+  $("resetColor").onclick = () => { key={r:255,g:0,b:255}; updSwatch(); processAll(); };
+  $("pickBtn").onclick = () => { pickMode=!pickMode; $("pickBtn").textContent = "🎯 從圖上吸色:" + (pickMode?"開(點任一張圖)":"關"); };
+
+  const drop = $("drop"), fileInput = $("file");
+  drop.onclick = () => fileInput.click();
+  fileInput.onchange = e => addFiles(e.target.files);
+  ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("hot");}));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("hot");}));
+  drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+  function addFiles(list){
+    [...list].filter(f=>f.type.startsWith("image/")).forEach(f=>{
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => { const it={name:f.name,img}; items.push(it); buildCard(it); processItem(it); };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  function buildCard(it){
+    const card = document.createElement("div"); card.className="card"; it.card = card;
+    const box = document.createElement("div"); box.className="checker";
+    const cv = document.createElement("canvas"); it.canvas = cv; box.appendChild(cv);
+
+    const fnrow = document.createElement("div"); fnrow.className="fnrow";
+    const fn = document.createElement("input"); fn.type="text";
+    fn.value = it.name.replace(/\.[^.]+$/,""); fn.placeholder = "檔名";
+    const ext = document.createElement("span"); ext.className="ext"; ext.textContent=".png";
+    fnrow.append(fn, ext); it.nameInput = fn;
+
+    const meta = document.createElement("div"); meta.className="meta"; it.meta = meta;
+
+    const btns = document.createElement("div"); btns.className="cardbtns";
+    const dl = document.createElement("button"); dl.className="btn-primary btn-sm"; dl.textContent="⬇ 下載";
+    dl.onclick = () => download(it);
+    const rm = document.createElement("button"); rm.className="btn-x btn-sm"; rm.textContent="✕ 移除";
+    rm.onclick = () => removeItem(it);
+    btns.append(dl, rm);
+
+    cv.addEventListener("click", ev => {
+      if(!pickMode) return;
+      const r = cv.getBoundingClientRect();
+      const x = Math.floor((ev.clientX-r.left)/r.width*cv.width);
+      const y = Math.floor((ev.clientY-r.top)/r.height*cv.height);
+      const d = it.srcData.data, i=(y*cv.width+x)*4;
+      key={r:d[i],g:d[i+1],b:d[i+2]}; updSwatch(); processAll();
+    });
+    card.append(box, fnrow, meta, btns);
+    grid.appendChild(card);
+  }
+
+  function removeItem(it){
+    const idx = items.indexOf(it);
+    if(idx>=0) items.splice(idx,1);
+    if(it.card) it.card.remove();
+  }
+  function clearAll(){
+    items.length = 0;
+    grid.innerHTML = "";
+    fileInput.value = "";
+  }
+  $("clearAll").onclick = clearAll;
+
+  function processItem(it){
+    const w=it.img.naturalWidth, h=it.img.naturalHeight;
+    const cv=it.canvas; cv.width=w; cv.height=h;
+    const ctx=cv.getContext("2d");
+    if(!it.srcData){ ctx.drawImage(it.img,0,0); it.srcData=ctx.getImageData(0,0,w,h); }
+    const src=it.srcData.data;
+    const out=ctx.createImageData(w,h); const o=out.data;
+    const tol=+$("tol").value, feat=+$("feat").value, spill=$("spill").checked;
+    let cleared=0;
+    for(let i=0;i<src.length;i+=4){
+      let r=src[i],g=src[i+1],b=src[i+2],a=src[i+3];
+      const d=Math.sqrt((r-key.r)**2+(g-key.g)**2+(b-key.b)**2);
+      let alpha=a;
+      if(d<tol){ alpha=0; cleared++; }
+      else if(d<tol+feat){ alpha=Math.round(a*(d-tol)/feat); }
+      if(alpha>0 && spill){
+        // 消粉邊:洋紅溢色時,把偏高的 R/B 拉近 G
+        if(r>g && b>g){ const m=(r+b)/2; if(m>g){ r=Math.round(r-(r-g)*0.45); b=Math.round(b-(b-g)*0.45); } }
+      }
+      o[i]=r;o[i+1]=g;o[i+2]=b;o[i+3]=alpha;
+    }
+    ctx.putImageData(out,0,0);
+    const pct=((cleared/(w*h))*100).toFixed(0);
+    it.meta.textContent = `${w}×${h} · 去背 ${pct}%`;
+  }
+
+  function processAll(){ items.forEach(processItem); }
+
+  function download(it){
+    it.canvas.toBlob(blob=>{
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      const base = ((it.nameInput && it.nameInput.value.trim()) || it.name.replace(/\.[^.]+$/,"")).replace(/\.png$/i,"");
+      a.download = base + ".png";
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    },"image/png");
+  }
+  $("dlAll").onclick = () => items.forEach((it,i)=>setTimeout(()=>download(it), i*400));
+  updSwatch();
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+version: 1
+assets:
+  - id: prop_question_stone_neutral_002
+    category: prop
+    name: question_stone_neutral
+    status: planned
+    canvas: { width: 1024, height: 1536, transparent: true }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: question_stone }
+    references:
+      scene: scene_question_stone_courtyard_morning_002
+      title_style: game/public/assets/title/background-landscape-morning-v1.png
+    view: { projection: 2d, angle: front_three_quarter, camera_elevation: eye_level, facing: left }
+    style: { linework: refined_ink_watercolor, lighting: morning_upper_right, shadow: contact_only, palette: bluegray_inkstone }
+    constraints:
+      - one ancient uncarved question stone only
+      - subtle natural vertical spirit veins suitable for later glow overlays
+      - flat stable base aligned to the scene plinth
+      - no pedestal
+      - no text
+      - no glyph
+      - no people
+      - no active glow
+      - no cropped edges
+    manual_checks:
+      - perspective matches the question-stone courtyard
+      - light direction matches the background
+      - silhouette remains readable at runtime size
+      - base can be masked into the plinth without a pasted-on edge
+  - id: prop_question_stone_001
+    category: prop
+    name: question_stone
+    status: approved
+    canvas: { width: 941, height: 1672, transparent: true }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: question_stone }
+    references: { active: game/public/assets/scenes/question-stone-isolated-neutral-v2.png }
+    view: { projection: 2d, angle: front_three_quarter, camera_elevation: 8, facing: front }
+    style: { linework: natural_rock, proportions: tall_irregular, lighting: upper_left, shadow: none, palette: dark_jade_stone }
+    constraints: [one object only, centered, no text, no people, no floor, no wall, no cropped edges]
+    manual_checks: [silhouette continuity, base contact, no generated glyphs]

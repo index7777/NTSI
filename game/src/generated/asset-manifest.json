@@ -1,0 +1,511 @@
+{
+  "version": 1,
+  "root": "assets",
+  "count": 66,
+  "assets": [
+    {
+      "path": "audio/music/daily-01.mp3",
+      "bytes": 953198,
+      "mime": "audio/mpeg"
+    },
+    {
+      "path": "audio/music/daily-02.mp3",
+      "bytes": 889251,
+      "mime": "audio/mpeg"
+    },
+    {
+      "path": "audio/music/daily-03.mp3",
+      "bytes": 1358619,
+      "mime": "audio/mpeg"
+    },
+    {
+      "path": "audio/music/game-start.mp3",
+      "bytes": 836588,
+      "mime": "audio/mpeg"
+    },
+    {
+      "path": "audio/music/menu.mp3",
+      "bytes": 1507830,
+      "mime": "audio/mpeg"
+    },
+    {
+      "path": "characters/outer-sect-steward-v1.png",
+      "bytes": 2612875,
+      "mime": "image/png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/player-female-v3.png",
+      "bytes": 1055243,
+      "mime": "image/png",
+      "width": 548,
+      "height": 1218,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/player-male-v2.png",
+      "bytes": 898712,
+      "mime": "image/png",
+      "width": 404,
+      "height": 973,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/sect-elder-v1.png",
+      "bytes": 1078798,
+      "mime": "image/png",
+      "width": 1024,
+      "height": 1536,
+      "mode": "RGBA"
+    },
+    {
+      "path": "scenes/character-selection-courtyard-morning-v1.png",
+      "bytes": 2892494,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/character-selection-courtyard-morning-v2.png",
+      "bytes": 2682413,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/character-selection-presect-registration-morning-v1.png",
+      "bytes": 3109031,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/chore-office-story-card-v1.png",
+      "bytes": 2797993,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/foundation-cave-v1.png",
+      "bytes": 2742683,
+      "mime": "image/png",
+      "width": 941,
+      "height": 1672,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/question-stone-courtyard-background-v2.png",
+      "bytes": 2609617,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/question-stone-dormant-v1.png",
+      "bytes": 2253994,
+      "mime": "image/png",
+      "width": 941,
+      "height": 1672,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/question-stone-isolated-neutral-v2.png",
+      "bytes": 1327297,
+      "mime": "image/png",
+      "width": 941,
+      "height": 1672,
+      "mode": "RGBA"
+    },
+    {
+      "path": "scenes/sect-courtyard-v1.png",
+      "bytes": 2837458,
+      "mime": "image/png",
+      "width": 941,
+      "height": 1672,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/sect-menial-courtyard-base-v1.png",
+      "bytes": 2824843,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "title/background-landscape-morning-v1.png",
+      "bytes": 2717151,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "title/background-v3.png",
+      "bytes": 2738909,
+      "mime": "image/png",
+      "width": 941,
+      "height": 1672,
+      "mode": "RGB"
+    },
+    {
+      "path": "title/logo-v1.png",
+      "bytes": 1250533,
+      "mime": "image/png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGBA"
+    },
+    {
+      "path": "title/traveler-v1.png",
+      "bytes": 927684,
+      "mime": "image/png",
+      "width": 705,
+      "height": 1167,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/hud/backpack-ink-v1.png",
+      "bytes": 153540,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/hud/backpack-ink-v2.png",
+      "bytes": 109959,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/question-stone/hand-contact-base-v1.png",
+      "bytes": 880451,
+      "mime": "image/png",
+      "width": 1024,
+      "height": 1536,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/achievement-handpainted-v2.png",
+      "bytes": 975722,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/achievement-hud-watercolor-v4.png",
+      "bytes": 1919,
+      "mime": "image/png",
+      "width": 62,
+      "height": 59,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/achievement-inkwash-reference-v3.png",
+      "bytes": 1910,
+      "mime": "image/png",
+      "width": 62,
+      "height": 59,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/achievement-jade-v1.svg",
+      "bytes": 504,
+      "mime": "image/svg+xml"
+    },
+    {
+      "path": "ui/title/achievement-sect-token-ink-circle-v5.png",
+      "bytes": 48097,
+      "mime": "image/png",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/icon-ink-ripple-underlay-v1.png",
+      "bytes": 37344,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/identity-jade-slip-ink-clean-v4.png",
+      "bytes": 1153175,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/identity-jade-slip-ink-effect-v3.png",
+      "bytes": 371540,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/identity-jade-slip-ink-v1.png",
+      "bytes": 1242563,
+      "mime": "image/png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/identity-jade-slip-ink-v2.png",
+      "bytes": 229860,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/mechanism-ink-clean-v3.png",
+      "bytes": 1027028,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/mechanism-ink-effect-v2.png",
+      "bytes": 425820,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/mechanism-ink-v1.png",
+      "bytes": 164692,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/primary-button-paper-v1.png",
+      "bytes": 258104,
+      "mime": "image/png",
+      "width": 900,
+      "height": 180,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/question-stone-ink-clean-v3.png",
+      "bytes": 1041483,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/question-stone-ink-effect-v2.png",
+      "bytes": 374327,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/question-stone-ink-v1.png",
+      "bytes": 112717,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/settings-handpainted-v2.png",
+      "bytes": 1463168,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/settings-hud-watercolor-v4.png",
+      "bytes": 7174,
+      "mime": "image/png",
+      "width": 51,
+      "height": 52,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/settings-ink-circle-v5.png",
+      "bytes": 46499,
+      "mime": "image/png",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/settings-ink-v1.svg",
+      "bytes": 454,
+      "mime": "image/svg+xml"
+    },
+    {
+      "path": "ui/title/settings-inkwash-reference-v3.png",
+      "bytes": 4198,
+      "mime": "image/png",
+      "width": 87,
+      "height": 70,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/settings-panel-simple-v2.png",
+      "bytes": 1665384,
+      "mime": "image/png",
+      "width": 1087,
+      "height": 1446,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/settings-panel-xuan-v1.png",
+      "bytes": 2141399,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/title-text-begin-journey-v1.png",
+      "bytes": 406553,
+      "mime": "image/png",
+      "width": 1627,
+      "height": 419,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/title-text-begin-journey-white-v1.png",
+      "bytes": 54814,
+      "mime": "image/png",
+      "width": 1627,
+      "height": 419,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/title-text-continue-cultivation-v1.png",
+      "bytes": 409167,
+      "mime": "image/png",
+      "width": 1436,
+      "height": 390,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/title-text-continue-cultivation-white-v1.png",
+      "bytes": 60889,
+      "mime": "image/png",
+      "width": 1436,
+      "height": 390,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/training-jade-slips-ink-circle-v5.png",
+      "bytes": 47072,
+      "mime": "image/png",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/training-record-handpainted-v2.png",
+      "bytes": 1206929,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/training-record-hud-watercolor-v4.png",
+      "bytes": 4101,
+      "mime": "image/png",
+      "width": 38,
+      "height": 41,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/training-record-ink-v1.svg",
+      "bytes": 570,
+      "mime": "image/svg+xml"
+    },
+    {
+      "path": "ui/title/training-record-inkwash-reference-v3.png",
+      "bytes": 2121,
+      "mime": "image/png",
+      "width": 60,
+      "height": 62,
+      "mode": "RGBA"
+    },
+    {
+      "path": "vfx/kenney-particle-pack/mist-01.png",
+      "bytes": 97452,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "P"
+    },
+    {
+      "path": "vfx/kenney-particle-pack/mist-02.png",
+      "bytes": 96825,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "P"
+    },
+    {
+      "path": "vfx/kenney-particle-pack/ui-light-trace-01.png",
+      "bytes": 38406,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "P"
+    },
+    {
+      "path": "vfx/kenney-particle-pack/ui-spark-04.png",
+      "bytes": 83811,
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "mode": "P"
+    },
+    {
+      "path": "vfx/title/title-mountain-mist-far-v1.png",
+      "bytes": 101505,
+      "mime": "image/png",
+      "width": 1475,
+      "height": 174,
+      "mode": "RGBA"
+    },
+    {
+      "path": "vfx/title/title-mountain-mist-mid-v1.png",
+      "bytes": 141914,
+      "mime": "image/png",
+      "width": 1459,
+      "height": 174,
+      "mode": "RGBA"
+    },
+    {
+      "path": "vfx/title/title-mountain-mist-near-v1.png",
+      "bytes": 66871,
+      "mime": "image/png",
+      "width": 1400,
+      "height": 125,
+      "mode": "RGBA"
+    }
+  ]
+}

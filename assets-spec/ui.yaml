@@ -1,0 +1,51 @@
+version: 1
+defaults:
+  category: ui
+  runtime: { engine: phaser, native_viewport: 1200x675, target_scene: shared_ui }
+  style: { linework: handpainted_ink, lighting: neutral, shadow: none, palette: warm_ink_jade_gold }
+  constraints: [one UI element only, transparent background, no outer black fog, no panel unless specified, no cropped edges]
+assets:
+  - id: ui_title_mechanism_icon_001
+    name: title_mechanism_icon
+    status: approved
+    canvas: { width: 1254, height: 1254, transparent: true }
+    references: { active: game/public/assets/ui/title/mechanism-ink-clean-v3.png }
+  - id: ui_title_question_stone_icon_001
+    name: title_question_stone_icon
+    status: approved
+    canvas: { width: 1254, height: 1254, transparent: true }
+    references: { active: game/public/assets/ui/title/question-stone-ink-clean-v3.png }
+  - id: ui_title_identity_jade_icon_001
+    name: title_identity_jade_icon
+    status: approved
+    canvas: { width: 1254, height: 1254, transparent: true }
+    references: { active: game/public/assets/ui/title/identity-jade-slip-ink-clean-v4.png }
+  - id: ui_character_choice_label_backing_001
+    name: character_choice_vertical_label_backing
+    status: planned
+    canvas: { width: 512, height: 1024, transparent: true }
+    references:
+      composition: "ChatGPT Image 2026年7月23日 上午11_59_51.png"
+      style: docs/art/UI_STYLE_GUIDE.md
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style:
+      linework: handpainted_ink
+      proportions: narrow_vertical_plaque
+      lighting: neutral
+      shadow: none
+      palette: pale_jade_ink_warm_gold
+    constraints:
+      - one narrow vertical text backing only
+      - no character frame
+      - no surrounding selection card
+      - no text
+      - no symbols
+      - no people
+      - no black fog
+      - no cast shadow
+      - generous transparent padding
+      - no cropped edges
+    manual_checks:
+      - supports two lines of live Traditional Chinese UI text
+      - remains readable over the approved character selection scene
+      - does not visually enclose or overlap the character

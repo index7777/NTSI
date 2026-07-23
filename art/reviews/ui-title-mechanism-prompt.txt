@@ -1,0 +1,31 @@
+Asset id: ui_title_mechanism_icon_001
+Asset category: ui
+Asset name: title_mechanism_icon
+
+Canvas:
+- width: 1254
+- height: 1254
+- transparent: True
+
+Runtime:
+- engine: phaser
+- native_viewport: 1200x675
+- target_scene: shared_ui
+
+References:
+- active: game/public/assets/ui/title/mechanism-ink-clean-v3.png
+
+Style:
+- linework: handpainted_ink
+- lighting: neutral
+- shadow: none
+- palette: warm_ink_jade_gold
+
+Constraints:
+- one UI element only
+- transparent background
+- no outer black fog
+- no panel unless specified
+- no cropped edges
+
+Use the referenced NTSI master assets and style guides. Do not add unlisted subjects, text, effects, UI, or narrative elements.

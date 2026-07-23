@@ -1,0 +1,22 @@
+version: 1
+defaults:
+  category: activity_card
+  canvas: { width: 768, height: 1152, transparent: false }
+  runtime: { engine: phaser, native_viewport: 1200x675, target_scene: activity_selection }
+  style: { linework: refined_ink_watercolor, lighting: scene_consistent, palette: luminous_bluegray_warm_cream }
+  constraints: [one activity only, player visible, no text, no UI, no cropped character, no watermark]
+  manual_checks: [activity-specific gaze, activity-specific pose, original player identity, realm outfit]
+assets:
+  - id: activity_bamboo_mortal_001
+    name: bamboo_mortal
+    status: candidate
+    references:
+      player_master: art/active/characters/player-male-master.png
+      scene_reference: art/candidates/activity-cards/rejected-contact-sheets/bamboo-novice-contact-sheet-v1.png
+  - id: activity_mantra_mortal_001
+    name: mantra_mortal
+    status: candidate
+    references:
+      player_master: art/active/characters/player-male-master.png
+      scene_reference: art/candidates/activity-cards/rejected-contact-sheets/mantra-novice-contact-sheet-v1.png
+

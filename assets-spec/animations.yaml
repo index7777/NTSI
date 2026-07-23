@@ -1,0 +1,54 @@
+version: 1
+animations:
+  - id: player_idle_breathing_001
+    category: animation
+    name: player_idle_breathing
+    status: planned
+    type: procedural
+    reference: assets-spec/characters.yaml#player_male_mortal_001
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: player }
+    animation:
+      duration_ms: 1800
+      loop: true
+      easing: Sine.InOut
+      channels:
+        y: { from: 0, to: -2 }
+        scale_y: { from: 1.0, to: 1.006 }
+    locked: [face, hairstyle, outfit, camera, body_proportions, lighting]
+    constraints: [no AI-generated frame sequence, no foot drift, no silhouette change]
+
+  - id: player_blink_001
+    category: animation
+    name: player_blink
+    status: planned
+    type: layer_swap
+    animation:
+      fps: 6
+      loop: false
+      frames: [eyes_open, eyes_half, eyes_closed, eyes_half, eyes_open]
+    locked: [face, hairstyle, outfit, camera, body_proportions, lighting]
+    constraints: [eyes layer only, no face redraw, no head movement]
+
+  - id: player_bamboo_chop_mortal_001
+    category: animation
+    name: player_bamboo_chop_mortal
+    status: planned
+    type: layered_pose_and_procedural_tween
+    references:
+      male: assets-spec/characters.yaml#player_male_mortal_001
+      female: assets-spec/characters.yaml#player_female_mortal_001
+      gameplay_mockup: "ChatGPT Image 2026年7月23日 下午04_46_44.png"
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: bamboo_minigame }
+    animation:
+      duration_ms: 420
+      loop: false
+      channels:
+        torso_rotation: { from: -4, to: 6 }
+        tool_rotation: { from: -24, to: 18 }
+        recoil_x: { from: 0, to: -3 }
+    locked: [face, hairstyle, mortal_outfit, body_proportions, lighting]
+    constraints:
+      - separate approved male and female action poses
+      - no free AI frame sequence
+      - axe or cleaver contact point aligns with the active bamboo target
+      - feet remain grounded
