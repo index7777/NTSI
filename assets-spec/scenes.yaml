@@ -79,7 +79,12 @@ assets:
       - preserve approved chore-office building and courtyard composition
       - extend laterally to native 16:9 without stretching
       - keep foreground story and bottom dialogue HUD safe areas
-      - no featured people
+      - six to eight novice chore disciples form a short orderly registration queue toward the service window
+      - disciples use the approved refined ink-watercolor 3.5-head chibi character style
+      - the queue includes men and women with varied height, weight, shoulder width, and age silhouettes
+      - all novice disciples wear the same coarse off-white and blue-gray chore-disciple uniform with only natural fit and wear variation
+      - one senior sect sister assists inside the service window in a clearly different but same-sect outer-disciple uniform
+      - no steward or other named story character
       - no added text
       - no UI
       - no effects
@@ -88,6 +93,8 @@ assets:
       - office remains immediately readable
       - background text from approved source is not altered or duplicated
       - dialogue portrait does not cover the service window
+      - every baked NPC also has a matching reusable transparent full-body candidate asset
+      - characters match art/references/character-style-board-v1.png in head-to-body ratio, linework, face design, and watercolor rendering
       - 960x540 readability
       - 640x360 readability
 

@@ -9,6 +9,8 @@ export interface RhythmTimingConfig {
   minIntervalMs: number;
   randomVariationMs: number;
   nextRoundDelayMs: number;
+  passiveResetAtTarget?: boolean;
+  passiveResetHoldMs?: number;
 }
 
 export interface RhythmGameStats {
@@ -53,6 +55,14 @@ export class RhythmTimingController {
       this.state = "finished";
       this.inputLocked = true;
       return "FINISHED";
+    }
+    if (
+      !this.inputLocked
+      && this.config.passiveResetAtTarget
+      && now >= this.targetTime + (this.config.passiveResetHoldMs ?? 0)
+    ) {
+      this.scheduleTarget(now + this.config.nextRoundDelayMs);
+      return null;
     }
     if (!this.inputLocked && now >= this.cycleStartedAt && now > this.targetTime + this.config.timingWindows.NORMAL) {
       return this.resolve("MISS", now);

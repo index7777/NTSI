@@ -18,8 +18,10 @@ export const BAMBOO_GAME_CONFIG = {
   minIntervalMs: 850,
   randomVariationMs: 80,
   nextRoundDelayMs: 220,
+  passiveResetAtTarget: true,
+  passiveResetHoldMs: 200,
   goalCount: 10,
-  rewardFormula: { baseCultivation: 10, perfectBonus: 2, goodBonus: 1 },
+  rewardFormula: { baseCultivation: 30, perfectBonus: 0, goodBonus: 0 },
   labels: {
     PERFECT: "人刃合一",
     GOOD: "運勁得宜",

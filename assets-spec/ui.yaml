@@ -5,6 +5,14 @@ defaults:
   style: { linework: handpainted_ink, lighting: neutral, shadow: none, palette: warm_ink_jade_gold }
   constraints: [one UI element only, transparent background, no outer black fog, no panel unless specified, no cropped edges]
 assets:
+  - id: ui_bamboo_combo_calligraphy_001
+    name: bamboo_combo_calligraphy_gold
+    status: candidate
+    canvas: { width: 1438, height: 676, transparent: true }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: bamboo_minigame }
+    style: { linework: energetic_xianxia_brush, lighting: neutral, shadow: none, palette: warm_gold }
+    constraints: [exact Traditional Chinese text 連擊 only, transparent background, no panel, no extra symbol, no number, no cropped edges]
+    manual_checks: [legible at HUD size, forceful brush rhythm, pairs with separate black ink underlay]
   - id: ui_title_mechanism_icon_001
     name: title_mechanism_icon
     status: approved
@@ -21,21 +29,21 @@ assets:
     canvas: { width: 1254, height: 1254, transparent: true }
     references: { active: game/public/assets/ui/title/identity-jade-slip-ink-clean-v4.png }
   - id: ui_character_choice_label_backing_001
-    name: character_choice_vertical_label_backing
+    name: character_choice_horizontal_label_backing
     status: planned
-    canvas: { width: 512, height: 1024, transparent: true }
+    canvas: { width: 1024, height: 384, transparent: true }
     references:
-      composition: "ChatGPT Image 2026年7月23日 上午11_59_51.png"
+      composition: art/references/ui/s01-character-selection/s01-character-selection-layout-approved-v1.png
       style: docs/art/UI_STYLE_GUIDE.md
     view: { projection: front, angle: straight_on, facing: neutral }
     style:
       linework: handpainted_ink
-      proportions: narrow_vertical_plaque
+      proportions: wide_horizontal_selection_strip
       lighting: neutral
       shadow: none
       palette: pale_jade_ink_warm_gold
     constraints:
-      - one narrow vertical text backing only
+      - one wide horizontal selection strip only
       - no character frame
       - no surrounding selection card
       - no text
@@ -46,6 +54,42 @@ assets:
       - generous transparent padding
       - no cropped edges
     manual_checks:
-      - supports two lines of live Traditional Chinese UI text
+      - supports a circular gender medallion and live Traditional Chinese UI text
       - remains readable over the approved character selection scene
       - does not visually enclose or overlap the character
+  - id: ui_character_selection_back_button_001
+    name: character_selection_back_circle
+    status: planned
+    canvas: { width: 512, height: 512, transparent: true }
+    references: { composition: art/references/ui/s01-character-selection/s01-character-selection-layout-approved-v1.png }
+    constraints: [one reusable warm-gold circular ring with centered ivory back arrow, fully transparent circle interior and exterior, no black fill, no horizontal backing, no text, no people, no cropped edges]
+  - id: ui_character_selection_settings_button_001
+    name: character_selection_settings_circle
+    status: planned
+    canvas: { width: 512, height: 512, transparent: true }
+    references: { composition: art/references/ui/s01-character-selection/s01-character-selection-layout-approved-v1.png }
+    constraints: [one reusable warm-gold circular ring with centered ivory ink-painted gear, fully transparent circle interior and exterior, no black fill, no horizontal backing, no text, no people, no cropped edges]
+  - id: ui_character_selection_hint_panel_001
+    name: character_selection_hint_gold_frame
+    status: planned
+    canvas: { width: 640, height: 640, transparent: true }
+    references: { composition: art/references/ui/s01-character-selection/s01-character-selection-layout-approved-v1.png }
+    constraints: [one transparent rectangular restrained gold line frame with small top ornament only, no black backing, no filled panel, no text, no people, no cropped edges]
+  - id: ui_character_selection_confirm_button_001
+    name: character_selection_confirm_button
+    status: planned
+    canvas: { width: 1024, height: 384, transparent: true }
+    references: { composition: art/references/ui/s01-character-selection/s01-character-selection-layout-approved-v1.png }
+    constraints: [one wide dark ink confirm button with pale double border and restrained corner ornaments, no text, no people, no cropped edges]
+  - id: ui_name_entry_registry_panel_001
+    name: name_entry_registry_panel
+    status: planned
+    canvas: { width: 1024, height: 1024, transparent: true }
+    references: { composition: art/references/ui/s01-name-entry/s01-name-entry-layout-approved-v1.png }
+    constraints: [one large warm ivory rice-paper registry panel with thin beige-gold border and small top ornament, no text, no labels, no input field, no buttons, no people, no cropped edges]
+  - id: ui_name_entry_confirm_button_001
+    name: name_entry_confirm_button
+    status: planned
+    canvas: { width: 1024, height: 384, transparent: true }
+    references: { composition: art/references/ui/s01-name-entry/s01-name-entry-layout-approved-v1.png }
+    constraints: [one wide muted blue-green ink button backing with restrained warm-gold border and notched corners, no text, no glow, no sparkles, no people, no cropped edges]

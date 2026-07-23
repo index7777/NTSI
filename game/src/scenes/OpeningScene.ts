@@ -19,6 +19,8 @@ import { BAMBOO_GAME_CONFIG, type BambooJudgement } from "../minigames/bamboo/co
 import { HeartManualGameController } from "../minigames/heart-manual/HeartManualGameController";
 import { HEART_MANUAL_CONFIG } from "../minigames/heart-manual/config";
 import type { RhythmJudgement } from "../minigames/shared/RhythmTimingController";
+import { CircularChargeGauge } from "../minigames/shared/CircularChargeGauge";
+import { ComboCounter } from "../minigames/shared/ComboCounter";
 import { WaterCarryGameController } from "../minigames/water-carry/WaterCarryGameController";
 import { WATER_CARRY_CONFIG, type BalanceZone } from "../minigames/water-carry/config";
 
@@ -43,6 +45,7 @@ interface PlayerState {
   sectDay: number;
   timeSlot: number;
   activityStats: Record<string, { count: number; cultivation: number }>;
+  gameProficiency: Record<string, number>;
   totalTrainingCount: number;
   tribulationCount: number;
   breakthroughCount: number;
@@ -95,6 +98,10 @@ export class OpeningScene extends Phaser.Scene {
   private playtimeCheckpoint = Date.now();
   private systemOverlay?: Phaser.GameObjects.Container;
   private titleSettingsOverlay?: Phaser.GameObjects.Container;
+  private titleNoticeOverlay?: Phaser.GameObjects.Container;
+  private activeGameplayPause?: () => void;
+  private activeGameplayResume?: () => void;
+  private selectedGender?: Gender;
   private player: PlayerState = {
     gender: "male",
     name: "無名",
@@ -113,6 +120,7 @@ export class OpeningScene extends Phaser.Scene {
     sectDay: 1,
     timeSlot: 0,
     activityStats: {},
+    gameProficiency: {},
     totalTrainingCount: 0,
     tribulationCount: 0,
     breakthroughCount: 0,
@@ -128,36 +136,69 @@ export class OpeningScene extends Phaser.Scene {
   preload() {
     this.load.image("game-title", "assets/title/background-v3.png");
     this.load.image("game-title-landscape", "assets/title/background-landscape-morning-v1.png");
-    this.load.image("game-logo", "assets/title/logo-v1.png");
+    this.load.image("game-logo", "assets/ui/title/approved-2026-07-23/jiujie-wenxian-logo-v3.png");
     this.load.image("title-traveler", "assets/title/traveler-v1.png");
     this.load.image("question-stone-scene", "assets/scenes/question-stone-dormant-v1.png");
-    this.load.image("question-stone-landscape-bg", "assets/scenes/question-stone-registration-square-landscape-v1.png");
+    this.load.image("question-stone-landscape-bg", "assets/scenes/question-stone-registration-square-centered-v2.png");
     this.load.image("question-stone-inscription", "assets/vfx/question-stone-inscription-exact-v1.png");
+    this.load.image("question-stone-golden-burst", "assets/vfx/question-stone/single-root-golden-burst-v1.png");
+    this.load.image("question-stone-golden-mist", "assets/vfx/question-stone/single-root-golden-mist-v1.png");
     this.load.image("bamboo-minigame-bg", "assets/scenes/bamboo-minigame-morning-v1.png");
     this.load.image("heart-manual-bg", "assets/scenes/heart-manual-room-landscape-v1.png");
     this.load.image("player-bamboo-male", "assets/characters/player-male-v2.png");
     this.load.image("player-bamboo-female", "assets/characters/player-female-v3.png");
+    this.load.image("player-bamboo-male-chop-1", "assets/characters/bamboo-actions/player-male-axe-chop-frame-1-v1.png");
+    this.load.image("player-bamboo-male-chop-2", "assets/characters/bamboo-actions/player-male-axe-chop-frame-2-v1.png");
+    this.load.image("player-bamboo-male-chop-3", "assets/characters/bamboo-actions/player-male-axe-chop-frame-3-v1.png");
+    this.load.image("player-bamboo-male-chop-4", "assets/characters/bamboo-actions/player-male-axe-chop-frame-4-v1.png");
+    this.load.image("player-bamboo-male-chop-5", "assets/characters/bamboo-actions/player-male-axe-chop-frame-5-v1.png");
+    this.load.image("player-bamboo-female-chop-1", "assets/characters/bamboo-actions/player-female-axe-chop-frame-1-v1.png");
+    this.load.image("player-bamboo-female-chop-2", "assets/characters/bamboo-actions/player-female-axe-chop-frame-2-v1.png");
+    this.load.image("player-bamboo-female-chop-3", "assets/characters/bamboo-actions/player-female-axe-chop-frame-3-v1.png");
+    this.load.image("player-bamboo-female-chop-4", "assets/characters/bamboo-actions/player-female-axe-chop-frame-4-v1.png");
+    this.load.image("player-bamboo-female-chop-5", "assets/characters/bamboo-actions/player-female-axe-chop-frame-5-v1.png");
+    this.load.image("bamboo-axe-impact", "assets/vfx/bamboo/bamboo-axe-impact-v1.png");
+    this.load.image("bamboo-combo-calligraphy", "assets/ui/bamboo/combo-calligraphy-gold-v1.png");
+    this.load.image("bamboo-combo-ink-backing", "assets/ui/bamboo/combo-ink-backing-v1.png");
     this.load.image("character-selection-bg", "assets/scenes/character-selection-presect-registration-morning-v1.png");
     this.load.image("question-stone-neutral", "assets/scenes/question-stone-isolated-neutral-v2.png");
     this.load.image("question-stone-hand", "assets/ui/question-stone/hand-contact-base-v1.png");
     this.load.image("sect-courtyard", "assets/scenes/sect-courtyard-v1.png");
     this.load.image("foundation-cave", "assets/scenes/foundation-cave-v1.png");
-    this.load.image("chore-office-story-card", "assets/scenes/chore-office-story-card-v1.png");
+    this.load.image("chore-office-story-card", "assets/scenes/chore-office-registration-chibi-v3.png");
     this.load.image("sect-elder", "assets/characters/sect-elder-v1.png");
+    this.load.image("sect-elder-portrait", "assets/characters/portraits/sect-elder-serious-1024-v1.png");
     this.load.image("outer-sect-steward", "assets/characters/outer-sect-steward-v1.png");
+    this.load.image("outer-sect-steward-portrait", "assets/characters/portraits/outer-sect-steward-closeup-1024-v2.png");
+    this.load.image("xuan-dialogue-panel", "assets/ui/dialogue/xuan-dialogue-panel-v1.png");
     this.load.image("title-mist-1", "assets/vfx/kenney-particle-pack/mist-01.png");
     this.load.image("title-mist-2", "assets/vfx/kenney-particle-pack/mist-02.png");
-    this.load.image("title-icon-mechanism", "assets/ui/title/mechanism-ink-clean-v3.png");
-    this.load.image("title-icon-question-stone", "assets/ui/title/question-stone-ink-clean-v3.png");
-    this.load.image("title-icon-identity-jade", "assets/ui/title/identity-jade-slip-ink-clean-v4.png");
+    this.load.image("title-ink-underlay", "assets/ui/title/icon-ink-ripple-underlay-v1.png");
+    this.load.image("shared-result-panel", "assets/ui/results/shared-result-panel-v1.png");
+    this.load.image("title-icon-settings", "assets/ui/title/approved-2026-07-23/settings-object-icon-v1.png");
+    this.load.image("title-icon-training-record", "assets/ui/title/approved-2026-07-23/cultivation-log-object-icon-v1.png");
+    this.load.image("title-icon-achievement", "assets/ui/title/approved-2026-07-23/achievement-object-icon-v1.png");
+    this.load.image("title-text-continue", "assets/ui/title/title-text-continue-cultivation-v1.png");
+    this.load.image("title-text-begin", "assets/ui/title/title-text-begin-journey-white-v1.png");
     this.load.image("hud-icon-backpack", "assets/ui/hud/backpack-ink-v2.png");
     this.load.image("title-primary-button-paper", "assets/ui/title/primary-button-paper-v1.png");
     this.load.image("title-settings-panel", "assets/ui/title/settings-panel-simple-v2.png");
+    this.load.image("s01-gender-strip", "assets/ui/s01/character-gender-choice-strip-v1.png");
+    this.load.image("s01-selection-confirm", "assets/ui/s01/character-selection-confirm-button-v1.png");
+    this.load.image("s01-info-frame", "assets/ui/s01/character-selection-info-gold-frame-v1.png");
+    this.load.image("s01-name-frame", "assets/ui/s01/name-entry-registry-gold-frame-v1.png");
+    this.load.image("s01-gold-button-frame", "assets/ui/s01/generic-gold-button-frame-v1.png");
+    this.load.image("shared-gold-circle", "assets/ui/shared-controls/gold-double-circle-plain-v1.png");
+    this.load.image("shared-back-arrow", "assets/ui/shared-controls/back-arrow-ivory-gold-v1.png");
+    this.load.image("shared-settings-gear", "assets/ui/shared-controls/settings-gear-arrow-style-center-cutout-v3.png");
     this.load.audio("daily-music-1", "assets/audio/music/daily-01.mp3");
     this.load.audio("daily-music-2", "assets/audio/music/daily-02.mp3");
     this.load.audio("daily-music-3", "assets/audio/music/daily-03.mp3");
     this.load.audio("menu-music", "assets/audio/music/menu.mp3");
     this.load.audio("game-start-music", "assets/audio/music/game-start.mp3");
+    this.load.audio("bamboo-axe-swing-sfx", "assets/audio/sfx/bamboo/axe-swing-v1.ogg");
+    this.load.audio("bamboo-axe-hit-sfx", "assets/audio/sfx/bamboo/axe-hit-bamboo-v1.ogg");
+    this.load.audio("bamboo-axe-perfect-sfx", "assets/audio/sfx/bamboo/axe-hit-perfect-v1.ogg");
   }
 
   create() {
@@ -257,6 +298,7 @@ export class OpeningScene extends Phaser.Scene {
     this.time.removeAllEvents();
     this.layer.removeAll(true);
     this.titleSettingsOverlay = undefined;
+    this.titleNoticeOverlay = undefined;
     this.layer.setPosition(LEGACY_VIEW_X, 0).setScale(LEGACY_VIEW_SCALE);
     this.drawBackdrop();
   }
@@ -298,6 +340,14 @@ export class OpeningScene extends Phaser.Scene {
     return object;
   }
 
+  private dialogueNameRuleWidth(name: string, fontSize = 19) {
+    return (Array.from(name).length + 1) * fontSize;
+  }
+
+  private dialogueLineText(value: string) {
+    return `　　${value}`;
+  }
+
   private button(x: number, y: number, label: string, action: () => void, width = 330) {
     const background = this.add.graphics();
     background.fillStyle(0xf4efe2, 0.94).fillRoundedRect(x - width / 2, y - 36, width, 72, 14);
@@ -322,8 +372,10 @@ export class OpeningScene extends Phaser.Scene {
       this.systemOverlay = undefined;
       this.time.paused = false;
       this.tweens.resumeAll();
+      this.activeGameplayResume?.();
       return;
     }
+    this.activeGameplayPause?.();
     this.time.paused = true;
     this.tweens.pauseAll();
     const overlay = this.add.container(LEGACY_VIEW_X, 0).setScale(LEGACY_VIEW_SCALE).setDepth(1000);
@@ -364,51 +416,73 @@ export class OpeningScene extends Phaser.Scene {
     titleArt.setScale(Math.max(1200 / titleArt.width, 675 / titleArt.height));
     this.layer.add(titleArt);
     const shade = this.add.graphics();
-    shade.fillGradientStyle(0xf8f3e8, 0xf8f3e8, 0xf8f3e8, 0xf8f3e8, 0.28, 0.07, 0, 0)
-      .fillRect(0, 0, 1200, 360);
-    shade.fillGradientStyle(0x102321, 0x102321, 0x102321, 0x102321, 0, 0.5, 0, 0.5)
-      .fillRect(650, 0, 550, 675);
+    shade.fillGradientStyle(0xf8f3e8, 0xf8f3e8, 0xf8f3e8, 0xf8f3e8, 0.1, 0.04, 0, 0)
+      .fillRect(0, 0, 1200, 290);
+    shade.fillGradientStyle(0x102321, 0x102321, 0x102321, 0x102321, 0, 0, 0.28, 0.28)
+      .fillRect(0, 540, 1200, 135);
     this.layer.add(shade);
     this.animateTitleEnvironment();
     const save = this.readSave();
-    if (!save) {
-      const traveler = this.add.image(430, 478, "title-traveler");
-      traveler.setScale(420 / traveler.height);
-      this.layer.add(traveler);
-    }
-    const logo = this.add.image(280, 132, "game-logo").setDisplaySize(387, 259);
+    const logo = this.add.image(254, 143, "game-logo")
+      .setDisplaySize(374, 135)
+      .setBlendMode(Phaser.BlendModes.MULTIPLY)
+      .setAlpha(0.96);
     this.layer.add(logo);
-    this.animateTitleLogo();
-    const buttonX = 940;
-    const buttonY = 465;
-    if (save) {
-      this.titlePrimaryButton(buttonX, buttonY - 40, "繼續修行", () => {
+    const buttonX = 944;
+    this.titlePrimaryButton(buttonX, 388, "繼續修行", () => {
+      if (!save) {
+        this.showTitleNotice("尚無修行紀錄");
+        return;
+      }
         this.player = save.player;
         this.startDailyMusic();
         this.resumeFromSave();
-      });
-      this.titlePrimaryButton(buttonX, buttonY + 40, "踏入仙途", () => this.startNewGame());
-    } else {
-      this.titlePrimaryButton(buttonX, buttonY, "踏入仙途", () => this.startNewGame());
-    }
-    this.titleFeatureButton(920, 110, "title-icon-mechanism", "機關", () => this.toggleTitleSettings());
-    this.titleFeatureButton(1020, 110, "title-icon-question-stone", "問仙石", () => this.showTitleNotice("尚未開放"));
-    this.titleFeatureButton(1120, 110, "title-icon-identity-jade", "身份玉簡", () => {
+    }, "paper", !save);
+    this.titlePrimaryButton(buttonX, 468, "踏入仙途", () => this.startNewGame(), "ink");
+    this.titleFeatureButton(950, 78, "title-icon-settings", "設定", () => this.toggleTitleSettings());
+    this.titleFeatureButton(1035, 78, "title-icon-training-record", "修行記錄", () => {
       if (!save) return this.showTitleNotice("尚無修行紀錄");
       this.player = save.player;
       this.showActivityHistory();
     });
+    this.titleFeatureButton(1120, 78, "title-icon-achievement", "成就", () => this.showTitleNotice("尚未開放"));
+    const version = this.add.text(24, 642, "版本 0.1.0", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "14px",
+      color: "#e7dec8",
+    }).setAlpha(0.76);
+    const exitIcon = this.add.graphics();
+    exitIcon.lineStyle(1.5, 0xe7dec8, 0.82)
+      .strokeRect(1028, 626, 17, 20)
+      .lineBetween(1038, 636, 1052, 636)
+      .lineBetween(1047, 631, 1052, 636)
+      .lineBetween(1047, 641, 1052, 636);
+    const exitLabel = this.add.text(1062, 636, "退出遊戲", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "18px",
+      color: "#e7dec8",
+      letterSpacing: 3,
+    }).setOrigin(0, 0.5);
+    const exitHit = this.add.zone(1090, 636, 150, 45).setInteractive({ useHandCursor: true });
+    exitHit.on("pointerover", () => exitLabel.setAlpha(0.72));
+    exitHit.on("pointerout", () => exitLabel.setAlpha(1));
+    exitHit.on("pointerup", () => {
+      this.saveGame();
+      window.close();
+    });
+    this.layer.add([version, exitIcon, exitLabel, exitHit]);
   }
 
   private titleFeatureButton(x: number, y: number, iconKey: string, label: string, action: () => void) {
-    const icon = this.add.image(x, y - 35, iconKey).setDisplaySize(100, 100);
+    const icon = this.add.image(x, y - 19, iconKey).setDisplaySize(62, 60);
     const iconScale = icon.scaleX;
-    const caption = this.add.text(x, y + 23, label, {
+    const caption = this.add.text(x, y + 25, label, {
       fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
-      fontSize: "17px",
-      color: "#171916",
+      fontSize: "15px",
+      color: "#30342f",
+      letterSpacing: 1,
     }).setOrigin(0.5);
-    const hitArea = this.add.zone(x, y + 2, 108, 112).setInteractive({ useHandCursor: true });
+    const hitArea = this.add.zone(x, y + 2, 82, 90).setInteractive({ useHandCursor: true });
     hitArea.on("pointerover", () => { icon.setScale(iconScale * 1.04); caption.setAlpha(0.72); });
     hitArea.on("pointerout", () => { icon.setScale(iconScale); caption.setAlpha(1); });
     hitArea.on("pointerdown", () => { icon.setScale(iconScale * 0.97); caption.setAlpha(0.58); });
@@ -416,34 +490,91 @@ export class OpeningScene extends Phaser.Scene {
     this.layer.add([icon, caption, hitArea]);
   }
 
-  private titlePrimaryButton(x: number, y: number, label: string, action: () => void) {
-    const source = label === "繼續修行"
-      ? "assets/ui/title/title-text-continue-cultivation-white-v1.png"
-      : "assets/ui/title/title-text-begin-journey-white-v1.png";
-    const control = this.add.dom(x - 44, y).createFromHTML(`
-      <button class="title-primary-action" type="button" aria-label="${label}">
-        <img src="${source}" alt="${label}" draggable="false" />
-      </button>
-    `);
-    control.addListener("click");
-    control.on("click", action);
-    this.layer.add(control);
+  private titlePrimaryButton(
+    x: number,
+    y: number,
+    label: string,
+    action: () => void,
+    tone: "paper" | "ink",
+    disabled = false,
+  ) {
+    const width = 270;
+    const height = 64;
+    const background = this.add.graphics();
+    if (tone === "paper") {
+      background.fillStyle(0xf4f0e6, disabled ? 0.74 : 0.94).fillRect(x - width / 2, y - height / 2, width, height);
+      background.lineStyle(1.2, 0x8d816e, disabled ? 0.34 : 0.56).strokeRect(x - width / 2, y - height / 2, width, height);
+      background.lineStyle(0.8, 0xb3a893, disabled ? 0.24 : 0.36)
+        .strokeRect(x - width / 2 + 6, y - height / 2 + 6, width - 12, height - 12);
+    } else {
+      background.fillStyle(0x243638, 0.94).fillRect(x - width / 2, y - height / 2, width, height);
+      background.lineStyle(1.5, 0xc4a866, 0.9).strokeRect(x - width / 2, y - height / 2, width, height);
+      background.lineStyle(1, 0xd9c286, 0.34).strokeRect(x - width / 2 + 6, y - height / 2 + 6, width - 12, height - 12);
+    }
+    const color = tone === "paper" ? "#343c38" : "#eadfc7";
+    const caption = this.add.image(x, y, label === "繼續修行" ? "title-text-continue" : "title-text-begin")
+      .setDisplaySize(label === "繼續修行" ? 128 : 131, 34)
+      .setAlpha(disabled ? 0.48 : 0.94);
+    const leftDiamond = this.add.text(x - 88, y, "◇", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "14px",
+      color,
+    }).setOrigin(0.5).setAlpha(disabled ? 0.4 : 0.72);
+    const rightDiamond = this.add.text(x + 88, y, "◇", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "14px",
+      color,
+    }).setOrigin(0.5).setAlpha(disabled ? 0.4 : 0.72);
+    const hitArea = this.add.zone(x, y, width, height).setInteractive({ useHandCursor: true });
+    hitArea.on("pointerover", () => {
+      background.setAlpha(disabled ? 0.86 : 0.9);
+      caption.setAlpha(disabled ? 0.7 : 0.82);
+    });
+    hitArea.on("pointerout", () => {
+      background.setAlpha(1);
+      caption.setAlpha(disabled ? 0.58 : 1);
+    });
+    hitArea.on("pointerup", action);
+    this.layer.add([background, caption, leftDiamond, rightDiamond, hitArea]);
   }
 
   private showTitleNotice(message: string) {
-    const paper = this.add.graphics().setDepth(950);
-    paper.fillStyle(0xded5c2, 0.9).fillRoundedRect(910, 172, 220, 40, 8);
-    paper.lineStyle(1, 0x75644c, 0.58).strokeRoundedRect(910, 172, 220, 40, 8);
-    const label = this.add.text(1020, 192, message, {
+    this.titleNoticeOverlay?.destroy(true);
+    const overlay = this.add.container(0, 0).setDepth(950);
+    this.titleNoticeOverlay = overlay;
+    const blocker = this.add.rectangle(600, 337.5, 1200, 675, 0x0b1110, 0.34).setInteractive();
+    const panel = this.add.graphics();
+    panel.fillStyle(0x121b19, 0.82).fillRect(435, 264, 330, 148);
+    panel.lineStyle(1.5, 0xc6ab72, 0.82).strokeRect(435, 264, 330, 148);
+    panel.lineStyle(0.8, 0xd8c598, 0.32).strokeRect(443, 272, 314, 132);
+    const ornament = this.add.text(600, 284, "◇", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "17px",
+      color: "#d4bc84",
+    }).setOrigin(0.5);
+    const label = this.add.text(600, 328, message, {
       fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
-      fontSize: "16px",
-      color: "#2f342f",
-    }).setOrigin(0.5).setDepth(951);
-    this.layer.add([paper, label]);
-    this.tweens.add({ targets: [paper, label], alpha: 0, duration: 300, delay: 1050, onComplete: () => {
-      paper.destroy();
-      label.destroy();
-    }});
+      fontSize: "23px",
+      color: "#eee2c7",
+      letterSpacing: 2,
+    }).setOrigin(0.5);
+    const dismiss = this.add.text(600, 376, "知曉", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "17px",
+      color: "#c9ae76",
+      letterSpacing: 3,
+    }).setOrigin(0.5);
+    const dismissHit = this.add.zone(600, 376, 120, 40).setInteractive({ useHandCursor: true });
+    const close = () => {
+      overlay.destroy(true);
+      if (this.titleNoticeOverlay === overlay) this.titleNoticeOverlay = undefined;
+    };
+    blocker.on("pointerup", close);
+    dismissHit.on("pointerover", () => dismiss.setColor("#f0d79d"));
+    dismissHit.on("pointerout", () => dismiss.setColor("#c9ae76"));
+    dismissHit.on("pointerup", close);
+    overlay.add([blocker, panel, ornament, label, dismiss, dismissHit]);
+    this.layer.add(overlay);
   }
 
   private toggleTitleSettings() {
@@ -557,6 +688,7 @@ export class OpeningScene extends Phaser.Scene {
       sectDay: 1,
       timeSlot: 0,
       activityStats: {},
+      gameProficiency: {},
       totalTrainingCount: 0,
       tribulationCount: 0,
       breakthroughCount: 0,
@@ -606,6 +738,7 @@ export class OpeningScene extends Phaser.Scene {
       data.player.sectDay ??= 1;
       data.player.timeSlot ??= 0;
       data.player.activityStats ??= {};
+      data.player.gameProficiency ??= {};
       data.player.totalTrainingCount ??= Object.values(data.player.activityStats).reduce((sum, item) => sum + item.count, 0);
       data.player.tribulationCount ??= 0;
       data.player.breakthroughCount ??= 0;
@@ -639,62 +772,223 @@ export class OpeningScene extends Phaser.Scene {
   private showGenderChoice() {
     this.resetLandscape();
     const scene = this.add.image(600, 337.5, "character-selection-bg").setDisplaySize(1200, 675);
-    const titleShade = this.add.rectangle(600, 56, 1200, 112, 0xf2eee4, 0.18);
-    const footerShade = this.add.rectangle(600, 638, 1200, 74, 0x14211f, 0.24);
-    this.layer.add([scene, titleShade, footerShade]);
-    this.text(600, 54, "選擇角色", 38, "#263735");
-    this.characterCard(315, 378, "male");
-    this.characterCard(885, 378, "female");
-    this.text(600, 646, "角色性別僅影響外觀，不影響遊戲內容與成長", 17, "#f0e7d2");
+    this.layer.add(scene);
+
+    this.selectionCornerControl("back");
+    this.selectionCornerControl("settings");
+
+    const title = this.add.text(600, 44, "選擇角色", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "39px",
+      color: "#273937",
+      letterSpacing: 5,
+    }).setOrigin(0.5);
+    const divider = this.add.graphics();
+    divider.lineStyle(1, 0x5c6964, 0.46)
+      .lineBetween(452, 88, 585, 88)
+      .lineBetween(615, 88, 748, 88);
+    const diamond = this.add.text(600, 88, "◇", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "20px",
+      color: "#52615d",
+    }).setOrigin(0.5);
+    this.layer.add([title, divider, diamond]);
+
+    const hintBacking = this.add.graphics();
+    hintBacking.fillStyle(0x101715, 0.48).fillPoints([
+      new Phaser.Geom.Point(28, 324),
+      new Phaser.Geom.Point(42, 274),
+      new Phaser.Geom.Point(101, 274),
+      new Phaser.Geom.Point(115, 286),
+      new Phaser.Geom.Point(129, 274),
+      new Phaser.Geom.Point(188, 274),
+      new Phaser.Geom.Point(202, 324),
+      new Phaser.Geom.Point(188, 378),
+      new Phaser.Geom.Point(42, 378),
+    ], true);
+    const hintFrame = this.add.image(115, 324, "s01-info-frame").setDisplaySize(190, 140);
+    const hintTitle = this.add.text(115, 292, "修行提示", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "15px",
+      color: "#d8c49a",
+      letterSpacing: 2,
+    }).setOrigin(0.5);
+    const hintBody = this.add.text(115, 337, "性別僅影響外觀\n不影響遊戲內容與成長", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "14px",
+      color: "#e3d8bd",
+      align: "center",
+      lineSpacing: 7,
+    }).setOrigin(0.5);
+    this.layer.add([hintBacking, hintFrame, hintTitle, hintBody]);
+
+    this.characterCard(300, 502, "male");
+    this.characterCard(900, 502, "female");
+
+    const confirm = this.add.image(600, 625, "s01-selection-confirm").setDisplaySize(310, 138);
+    const confirmLabel = this.add.text(600, 625, "確認選擇", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "24px",
+      color: "#eee3cc",
+      letterSpacing: 4,
+    }).setOrigin(0.5);
+    const confirmHit = this.add.zone(600, 625, 260, 64).setInteractive({ useHandCursor: true });
+    confirm.setAlpha(this.selectedGender ? 1 : 0.56);
+    confirmLabel.setAlpha(this.selectedGender ? 1 : 0.56);
+    confirmHit.on("pointerover", () => {
+      confirm.setAlpha(this.selectedGender ? 0.88 : 0.64);
+      confirmLabel.setAlpha(this.selectedGender ? 0.82 : 0.64);
+    });
+    confirmHit.on("pointerout", () => {
+      confirm.setAlpha(this.selectedGender ? 1 : 0.56);
+      confirmLabel.setAlpha(this.selectedGender ? 1 : 0.56);
+    });
+    confirmHit.on("pointerup", () => {
+      if (!this.selectedGender) return;
+      this.player.gender = this.selectedGender;
+      this.showNameEntry();
+    });
+    this.layer.add([confirm, confirmLabel, confirmHit]);
   }
 
   private characterCard(x: number, y: number, gender: Gender) {
     const label = gender === "male" ? "男" : "女";
-    const card = this.add.dom(x, y).createFromHTML(`
-      <button class="character-choice-card character-choice-${gender}" type="button" aria-label="選擇${label}角色">
-        <span class="character-choice-label">${label}</span>
-      </button>
-    `);
-    card.addListener("click");
-    card.on("click", () => {
-      this.player.gender = gender;
-      this.tweens.add({
-        targets: this.layer,
-        alpha: 0,
-        duration: 320,
-        ease: "Sine.inOut",
-        onComplete: () => {
-          this.showNameEntry();
-          this.layer.setAlpha(0);
-          this.tweens.add({ targets: this.layer, alpha: 1, duration: 320, ease: "Sine.inOut" });
-        },
-      });
+    const selected = this.selectedGender === gender;
+    const displayY = selected ? y - 4 : y;
+    const strip = this.add.image(x, displayY, "s01-gender-strip").setDisplaySize(229, 71);
+    if (selected) {
+      strip.setTint(0xffefc2);
+    } else if (this.selectedGender) {
+      strip.setAlpha(0.7);
+    }
+    const medallionColor = gender === "male" ? 0x426d79 : 0x9a6857;
+    const medallion = this.add.circle(x - 79, displayY, 20, medallionColor, selected ? 0.98 : 0.82);
+    medallion.setStrokeStyle(selected ? 3 : 1.5, 0xd8c49a, selected ? 0.94 : 0.66);
+    const genderLabel = this.add.text(x - 79, displayY, label, {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "21px",
+      color: "#f2e8d2",
+    }).setOrigin(0.5);
+    const cardDiamond = this.add.text(x - 22, displayY, selected ? "◆" : "◇", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: selected ? "20px" : "16px",
+      color: selected ? "#f0cb69" : "#7a766b",
+      shadow: selected ? { color: "#f4d77e", blur: 9, fill: true } : undefined,
+    }).setOrigin(0.5);
+    const caption = this.add.text(x + 38, displayY, "選擇此角色", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "15px",
+      color: selected ? "#765723" : "#39423e",
+      letterSpacing: 1,
+    }).setOrigin(0.5);
+    const hitArea = this.add.zone(x, displayY, 238, 78).setInteractive({ useHandCursor: true });
+    hitArea.on("pointerover", () => {
+      strip.setTint(0xfff8df);
+      cardDiamond.setColor("#d2a946");
+      caption.setColor("#8a672f");
     });
-    this.layer.add(card);
+    hitArea.on("pointerout", () => {
+      strip.clearTint();
+      cardDiamond.setColor(selected ? "#f0cb69" : "#7a766b");
+      caption.setColor(selected ? "#765723" : "#39423e");
+    });
+    hitArea.on("pointerup", () => {
+      this.selectedGender = gender;
+      this.showGenderChoice();
+    });
+    if (selected) {
+      this.tweens.add({
+        targets: cardDiamond,
+        alpha: { from: 0.62, to: 1 },
+        scaleX: { from: 0.92, to: 1.12 },
+        scaleY: { from: 0.92, to: 1.12 },
+        duration: 760,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.inOut",
+      });
+    }
+    this.layer.add([strip, medallion, genderLabel, cardDiamond, caption, hitArea]);
+  }
+
+  private selectionCornerControl(kind: "back" | "settings", backAction?: () => void, settingsAction?: () => void) {
+    const isBack = kind === "back";
+    const x = isBack ? 107 : 1091;
+    const backingX = isBack ? 99 : 1101;
+    const backing = this.add.rectangle(backingX, 42, 155, 58, 0x0d1413, 0.34);
+    const symbol = this.add.image(x, 42, isBack ? "shared-back-arrow" : "shared-settings-gear")
+      .setDisplaySize(isBack ? 19 : 31, isBack ? 38 : 31);
+    const caption = this.add.text(isBack ? 167 : 1169, 42, isBack ? "返回" : "設定", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "19px",
+      color: "#eadfc6",
+      letterSpacing: 2,
+    }).setOrigin(1, 0.5);
+    const hitArea = this.add.zone(backingX, 42, 155, 58).setInteractive({ useHandCursor: true });
+    hitArea.on("pointerover", () => {
+      symbol.setAlpha(0.76);
+      caption.setAlpha(0.76);
+    });
+    hitArea.on("pointerout", () => {
+      symbol.setAlpha(1);
+      caption.setAlpha(1);
+    });
+    hitArea.on("pointerup", () => {
+      if (isBack) {
+        if (backAction) {
+          backAction();
+        } else {
+          this.selectedGender = undefined;
+          this.showTitle();
+        }
+      } else {
+        if (settingsAction) settingsAction();
+        else this.toggleTitleSettings();
+      }
+    });
+    this.layer.add([backing, symbol, caption, hitArea]);
   }
 
   private showNameEntry() {
     this.resetLandscape();
     const scene = this.add.image(600, 337.5, "character-selection-bg").setDisplaySize(1200, 675);
-    const blocker = this.add.rectangle(600, 337.5, 1200, 675, 0x101b19, 0.5).setInteractive();
-    const panel = this.add.image(600, 330, "title-settings-panel").setDisplaySize(500, 430);
-    const instruction = this.add.text(600, 218, "此名將記入宗門名冊", {
+    const blocker = this.add.rectangle(600, 337.5, 1200, 675, 0x101816, 0.48).setInteractive();
+    const paperBacking = this.add.rectangle(600, 342, 424, 392, 0xeee4d2, 0.97);
+    const panel = this.add.image(600, 342, "s01-name-frame").setDisplaySize(510, 510);
+    this.layer.add([scene, blocker, paperBacking, panel]);
+    this.selectionCornerControl("back", () => this.showGenderChoice());
+    this.selectionCornerControl("settings");
+
+    const title = this.add.text(600, 213, "記入宗門名冊", {
       fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
-      fontSize: "18px",
-      color: "#60706a",
+      fontSize: "27px",
+      color: "#343c38",
+      letterSpacing: 3,
     }).setOrigin(0.5);
-    this.layer.add([scene, blocker, panel, instruction]);
+    const instruction = this.add.text(600, 253, "此名將記入宗門名冊，確認後仍可於設定中修改", {
+      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+      fontSize: "14px",
+      color: "#706a5c",
+    }).setOrigin(0.5);
+    this.layer.add([title, instruction]);
     const suggestedName = this.player.gender === "male" ? "沈青川" : "蘇晚晴";
-    const dom = this.add.dom(600, 365).createFromHTML(`
-      <div class="name-entry">
+    const dom = this.add.dom(600, 389).createFromHTML(`
+      <div class="name-entry name-entry-v2">
         <input aria-label="角色姓名" maxlength="8" value="${suggestedName}" autocomplete="off" />
+        <div class="name-count" aria-live="polite">${Array.from(suggestedName).length} / 8</div>
         <div class="error" aria-live="polite"></div>
         <button class="name-entry-confirm" type="button" data-action="confirm">確認姓名</button>
-        <button class="name-entry-return" type="button" data-action="return">返回選角</button>
       </div>
     `);
     this.layer.add(dom);
-    dom.addListener("click");
+    dom.addListener("click input");
+    dom.on("input", () => {
+      const input = dom.getChildByProperty("tagName", "INPUT") as HTMLInputElement | null;
+      const count = dom.getChildByProperty("className", "name-count") as HTMLDivElement | null;
+      const error = dom.getChildByProperty("className", "error") as HTMLDivElement | null;
+      if (count) count.textContent = `${Array.from(input?.value ?? "").length} / 8`;
+      if (error) error.textContent = "";
+    });
     dom.on("click", (event: Event) => {
       const target = event.target as HTMLElement;
       if (target.tagName !== "BUTTON") return;
@@ -705,8 +999,9 @@ export class OpeningScene extends Phaser.Scene {
       const input = dom.getChildByProperty("tagName", "INPUT") as HTMLInputElement | null;
       const error = dom.getChildByProperty("className", "error") as HTMLDivElement | null;
       const name = input?.value.trim() ?? "";
-      if (name.length < 1 || name.length > 8) {
-        if (error) error.textContent = "姓名需為1～8個字";
+      const length = Array.from(name).length;
+      if (length < 2 || length > 8) {
+        if (error) error.textContent = "姓名需為 2～8 個字";
         return;
       }
       this.player.name = name;
@@ -719,111 +1014,155 @@ export class OpeningScene extends Phaser.Scene {
     this.resetLandscape();
     const scene = this.add.image(600, 337.5, "question-stone-landscape-bg").setDisplaySize(1200, 675);
     const shade = this.add.rectangle(600, 337.5, 1200, 675, 0x102321, 0.08);
-    const narration = this.add.text(600, 92, "", {
-      fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
-      fontSize: "31px",
-      color: "#f5edda",
-      stroke: "#273a35",
-      strokeThickness: 5,
-      shadow: { color: "#17231f", blur: 8, fill: true, offsetX: 0, offsetY: 2 },
-    }).setOrigin(0.5).setAlpha(0);
-    const inscription = this.add.image(574, 307, "question-stone-inscription")
-      .setDisplaySize(58, 132)
-      .setTint(0xffe7ae)
-      .setBlendMode(Phaser.BlendModes.ADD)
+    const goldenBurst = this.add.image(600, 326, "question-stone-golden-burst")
+      .setScale(0.1)
+      .setBlendMode(Phaser.BlendModes.SCREEN)
       .setAlpha(0);
-    this.layer.add([scene, shade, narration, inscription]);
+    const goldenMist = this.add.image(600, 337.5, "question-stone-golden-mist")
+      .setDisplaySize(1200, 675)
+      .setBlendMode(Phaser.BlendModes.SCREEN)
+      .setAlpha(0);
+    const contactHand = this.add.image(600, 370, "question-stone-hand")
+      .setDisplaySize(54, 79)
+      .setOrigin(0.5, 0.78)
+      .setAlpha(0);
+    this.layer.add([scene, shade, goldenBurst, contactHand, goldenMist]);
 
-    const stoneZone = this.add.zone(574, 326, 170, 270);
+    const stoneZone = this.add.zone(600, 326, 170, 270);
     this.layer.add(stoneZone);
 
     const dialogue = this.add.container(0, 0).setAlpha(0);
-    const dialoguePanel = this.add.graphics();
-    dialoguePanel.fillStyle(0xeee6d4, 0.94).fillRoundedRect(185, 493, 830, 150, 10);
-    dialoguePanel.lineStyle(1, 0x6c5d48, 0.72).strokeRoundedRect(185, 493, 830, 150, 10);
-    const elderPortrait = this.add.image(285, 568, "sect-elder");
-    elderPortrait.setScale(Math.min(142 / elderPortrait.width, 170 / elderPortrait.height));
-    const nameplate = this.add.text(375, 518, "宗門執事", {
+    const dialoguePanel = this.add.image(600, 568, "xuan-dialogue-panel").setDisplaySize(860, 166);
+    const nameplate = this.add.text(226, 516, "宗門老執事", {
       fontFamily: '"Noto Serif TC", serif', fontSize: "19px", color: "#72552f",
     });
-    const instruction = this.add.text(375, 566, "將手放上去。", {
-      fontFamily: '"Noto Serif TC", serif', fontSize: "27px", color: "#20312e",
+    const nameRule = this.add.rectangle(226, 546, this.dialogueNameRuleWidth(nameplate.text), 1, 0x8d7655, 0.68).setOrigin(0, 0.5);
+    const instruction = this.add.text(226, 558, "", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "22px",
+      color: "#20312e",
+      wordWrap: { width: 520 },
+      lineSpacing: 9,
     });
-    dialogue.add([dialoguePanel, elderPortrait, nameplate, instruction]);
+    const nextLineHint = this.add.text(958, 611, "（下一句……）", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "15px",
+      color: "#806a49",
+    }).setOrigin(1, 0.5).setAlpha(0);
+    const elderPortrait = this.add.image(992, 586, "sect-elder-portrait")
+      .setDisplaySize(205, 205)
+      .setOrigin(1, 1);
+    const dialogueHit = this.add.zone(600, 568, 860, 166).setInteractive({ useHandCursor: true });
+    dialogue.add([dialoguePanel, nameplate, nameRule, instruction, elderPortrait, nextLineHint, dialogueHit]);
     this.layer.add(dialogue);
 
     stoneZone.disableInteractive();
-    const lines = ["此石名曰問仙", "可照靈根", "可辨仙緣", "願入宗者，皆須一問！"];
-    const playLine = (index: number) => {
-      if (index >= lines.length) {
-        this.tweens.add({ targets: dialogue, alpha: 1, duration: 320, onComplete: () => {
-          this.time.delayedCall(1250, () => this.tweens.add({ targets: dialogue, alpha: 0, duration: 300, onComplete: () => {
-            stoneZone.setInteractive({ cursor: "pointer" });
-            this.tweens.add({
-              targets: inscription,
-              alpha: { from: 0.05, to: 0.14 },
-              duration: 1200,
-              yoyo: true,
-              repeat: -1,
-              ease: "Sine.inOut",
-            });
-          }}));
+    const lines = ["此石名曰問仙。", "可照靈根，亦可辨仙緣。", "願入宗者，皆須一問！", "將手放上去。"]
+      .map((value) => this.dialogueLineText(value));
+    let lineIndex = 0;
+    let typingEvent: Phaser.Time.TimerEvent | undefined;
+    let lineComplete = false;
+    const finishDialogue = () => {
+      dialogueHit.disableInteractive();
+      this.tweens.add({ targets: dialogue, alpha: 0, duration: 300, onComplete: () => {
+          stoneZone.setInteractive({ cursor: "none" });
         }});
-        return;
-      }
-      narration.setText(lines[index]);
-      this.tweens.add({
-        targets: narration,
-        alpha: 1,
-        y: { from: 99, to: 92 },
-        duration: 620,
-        hold: 1450,
-        yoyo: true,
-        ease: "Sine.inOut",
-        onComplete: () => playLine(index + 1),
+    };
+    const typeLine = () => {
+      const characters = Array.from(lines[lineIndex]);
+      let visible = 0;
+      lineComplete = false;
+      nextLineHint.setAlpha(0);
+      instruction.setText("").setAlpha(1);
+      typingEvent?.remove(false);
+      typingEvent = this.time.addEvent({
+        delay: 110,
+        repeat: characters.length - 1,
+        callback: () => {
+          visible += 1;
+          instruction.setText(characters.slice(0, visible).join(""));
+          if (visible >= characters.length) {
+            lineComplete = true;
+            nextLineHint.setAlpha(1);
+          }
+        },
       });
     };
-    this.time.delayedCall(700, () => playLine(0));
+    dialogueHit.on("pointerup", () => {
+      if (!lineComplete) {
+        typingEvent?.remove(false);
+        instruction.setText(lines[lineIndex]);
+        lineComplete = true;
+        nextLineHint.setAlpha(1);
+        return;
+      }
+      lineIndex += 1;
+      if (lineIndex >= lines.length) {
+        finishDialogue();
+        return;
+      }
+      typeLine();
+    });
+    this.tweens.add({
+      targets: dialogue,
+      alpha: 1,
+      duration: 320,
+      delay: 500,
+      onComplete: typeLine,
+    });
 
     let holdTween: Phaser.Tweens.Tween | undefined;
     let completed = false;
-    const cancelHold = () => {
+    const cancelHold = (hideHand = true) => {
       if (completed) return;
       holdTween?.stop();
       holdTween = undefined;
-      this.tweens.add({ targets: inscription, alpha: 0, duration: 220 });
+      contactHand.clearTint();
+      if (hideHand) this.tweens.add({ targets: contactHand, alpha: 0, duration: 160 });
+      this.tweens.add({ targets: goldenBurst, alpha: 0, scaleX: 0.1, scaleY: 0.1, duration: 220 });
     };
     const completeHold = () => {
       completed = true;
-      stoneZone.disableInteractive();
+      contactHand.setAlpha(1);
+      goldenBurst.setAlpha(0.32).setScale(0.14);
       this.tweens.add({
-        targets: inscription,
+        targets: goldenBurst,
         alpha: 1,
-        scaleX: 1.08,
-        scaleY: 1.08,
-        duration: 760,
-        yoyo: true,
-        hold: 260,
+        scaleX: 1.05,
+        scaleY: 1.05,
+        angle: 6,
+        duration: 920,
+        ease: "Cubic.out",
       });
-      this.cameras.main.flash(420, 242, 229, 191, false);
-      this.time.delayedCall(1350, () => this.revealAptitude());
+      this.time.delayedCall(420, () => {
+        this.cameras.main.flash(360, 255, 232, 176, false);
+        this.tweens.add({
+          targets: goldenMist,
+          alpha: 1,
+          duration: 720,
+          ease: "Sine.inOut",
+        });
+      });
+      this.time.delayedCall(1650, () => this.revealAptitude());
     };
     stoneZone.on("pointerdown", () => {
       if (completed) return;
+      contactHand.setAlpha(1);
       const meter = { value: 0 };
       holdTween = this.tweens.add({ targets: meter, value: 1, duration: 1650, onUpdate: () => {
-        inscription.setAlpha(0.12 + meter.value * 0.88);
-        const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
-          new Phaser.Display.Color(171, 211, 197),
-          new Phaser.Display.Color(255, 235, 178),
-          100,
-          Math.round(meter.value * 100),
-        );
-        inscription.setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b));
+        contactHand.setTint(Phaser.Display.Color.GetColor(255, 245 - Math.round(meter.value * 8), 214));
+        goldenBurst.setAlpha(0.03 + meter.value * 0.24);
+        goldenBurst.setScale(0.1 + meter.value * 0.04);
       }, onComplete: completeHold });
     });
-    stoneZone.on("pointerup", cancelHold);
-    stoneZone.on("pointerout", cancelHold);
+    stoneZone.on("pointerover", () => {
+      if (!completed) contactHand.setAlpha(1);
+    });
+    stoneZone.on("pointerup", () => {
+      contactHand.setAlpha(0);
+      cancelHold(true);
+    });
+    stoneZone.on("pointerout", () => cancelHold(true));
   }
 
   private revealAptitude() {
@@ -838,7 +1177,7 @@ export class OpeningScene extends Phaser.Scene {
     this.saveGame();
     const scene = this.add.image(600, 337.5, "question-stone-landscape-bg").setDisplaySize(1200, 675);
     const shade = this.add.rectangle(600, 337.5, 1200, 675, 0x102321, 0.22);
-    const inscription = this.add.image(574, 307, "question-stone-inscription")
+    const inscription = this.add.image(600, 307, "question-stone-inscription")
       .setDisplaySize(58, 132).setTint(0xffe7ae).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.86);
     this.layer.add([scene, shade, inscription]);
     const readableText = (x: number, y: number, value: string, size: number, color: string) => {
@@ -846,11 +1185,9 @@ export class OpeningScene extends Phaser.Scene {
         fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
         fontSize: `${size}px`,
         color,
-        stroke: "#1f302c",
-        strokeThickness: 4,
         align: "center",
         wordWrap: { width: 820 },
-        shadow: { color: "#16211e", blur: 7, fill: true, offsetX: 0, offsetY: 2 },
+        shadow: { color: "#16211e", blur: 3, fill: true, offsetX: 0, offsetY: 1 },
       }).setOrigin(0.5).setAlpha(0);
       this.layer.add(label);
       return label;
@@ -864,29 +1201,93 @@ export class OpeningScene extends Phaser.Scene {
       return readableText(x, y, `${ATTRIBUTE_LABELS[attribute]}  ${this.player.attributes[attribute]}`, 25, "#d9eadf");
     });
     const dialogue = this.add.container(0, 0).setAlpha(0);
-    const panel = this.add.graphics();
-    panel.fillStyle(0xeee6d4, 0.95).fillRoundedRect(185, 493, 830, 150, 10);
-    panel.lineStyle(1, 0x6c5d48, 0.72).strokeRoundedRect(185, 493, 830, 150, 10);
-    const portrait = this.add.image(285, 568, "sect-elder");
-    portrait.setScale(Math.min(142 / portrait.width, 170 / portrait.height));
-    const name = this.add.text(375, 518, "宗門執事", {
+    const panel = this.add.image(600, 568, "xuan-dialogue-panel").setDisplaySize(860, 166);
+    const name = this.add.text(226, 516, "宗門老執事", {
       fontFamily: '"Noto Serif TC", serif', fontSize: "19px", color: "#72552f",
     });
-    const line = this.add.text(375, 563, "", {
-      fontFamily: '"Noto Serif TC", serif', fontSize: "23px", color: "#20312e",
-      wordWrap: { width: 590 },
+    const nameRule = this.add.rectangle(
+      226,
+      546,
+      this.dialogueNameRuleWidth(name.text),
+      1,
+      0x8d7655,
+      0.68,
+    ).setOrigin(0, 0.5);
+    const line = this.add.text(226, 558, "", {
+      fontFamily: '"Noto Serif TC", serif', fontSize: "22px", color: "#20312e",
+      wordWrap: { width: 520 },
+      lineSpacing: 9,
     });
-    dialogue.add([panel, portrait, name, line]);
+    const portrait = this.add.image(992, 586, "sect-elder-portrait")
+      .setDisplaySize(205, 205)
+      .setOrigin(1, 1);
+    const nextLineHint = this.add.text(958, 611, "（下一句……）", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "15px",
+      color: "#806a49",
+    }).setOrigin(1, 0.5).setAlpha(0);
+    const dialogueHit = this.add.zone(600, 568, 860, 166).setInteractive({ useHandCursor: true });
+    dialogue.add([panel, name, nameRule, line, portrait, nextLineHint, dialogueHit]);
     this.layer.add(dialogue);
     const destination = this.add.text(600, 565, "前往雜役處", {
       fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
       fontSize: "27px",
       color: "#f3e8ce",
-      stroke: "#253733",
-      strokeThickness: 4,
     }).setOrigin(0.5).setAlpha(0).setInteractive({ useHandCursor: true });
     destination.on("pointerup", () => this.showChoreOfficeSceneCard());
     this.layer.add(destination);
+
+    const elderLines = [
+      "有靈根，先去雜役處報到。",
+      "想引氣入體，得先積累足夠修為，先去領功法吧！",
+    ].map((value) => this.dialogueLineText(value));
+    let elderLineIndex = 0;
+    let elderTypingEvent: Phaser.Time.TimerEvent | undefined;
+    let elderLineComplete = false;
+    const typeElderLine = () => {
+      const characters = Array.from(elderLines[elderLineIndex]);
+      let visible = 0;
+      elderLineComplete = false;
+      nextLineHint.setAlpha(0);
+      line.setText("");
+      elderTypingEvent?.remove(false);
+      elderTypingEvent = this.time.addEvent({
+        delay: 110,
+        repeat: characters.length - 1,
+        callback: () => {
+          visible += 1;
+          line.setText(characters.slice(0, visible).join(""));
+          if (visible >= characters.length) {
+            elderLineComplete = true;
+            nextLineHint.setAlpha(1);
+          }
+        },
+      });
+    };
+    dialogueHit.on("pointerup", () => {
+      if (!elderLineComplete) {
+        elderTypingEvent?.remove(false);
+        line.setText(elderLines[elderLineIndex]);
+        elderLineComplete = true;
+        nextLineHint.setAlpha(1);
+        return;
+      }
+      elderLineIndex += 1;
+      if (elderLineIndex < elderLines.length) {
+        typeElderLine();
+        return;
+      }
+      dialogueHit.disableInteractive();
+      nextLineHint.setAlpha(0);
+      this.tweens.add({
+        targets: dialogue,
+        alpha: 0,
+        duration: 420,
+        onComplete: () => {
+          this.tweens.add({ targets: destination, alpha: 1, y: { from: 575, to: 565 }, duration: 620 });
+        },
+      });
+    });
 
     this.tweens.add({
       targets: preface, alpha: 1, duration: 650, hold: 1500, yoyo: true,
@@ -902,17 +1303,7 @@ export class OpeningScene extends Phaser.Scene {
             });
             this.time.delayedCall(1800, () => {
               this.tweens.add({ targets: [rootLabel, revelation, ...attributeLabels], alpha: 0, duration: 420 });
-              this.tweens.add({ targets: dialogue, alpha: 1, duration: 520, delay: 360, onComplete: () => {
-                line.setText("有靈根。先去雜役處報到。");
-                this.time.delayedCall(1500, () => {
-                  line.setText("想引氣入體，得先積累足夠修為，先去領功法吧！");
-                  this.time.delayedCall(1900, () => this.tweens.add({
-                    targets: dialogue, alpha: 0, duration: 420, onComplete: () => {
-                      this.tweens.add({ targets: destination, alpha: 1, y: { from: 575, to: 565 }, duration: 620 });
-                    },
-                  }));
-                });
-              }});
+              this.tweens.add({ targets: dialogue, alpha: 1, duration: 520, delay: 360, onComplete: typeElderLine });
             });
           },
         })),
@@ -924,30 +1315,119 @@ export class OpeningScene extends Phaser.Scene {
     this.resetLandscape();
     const scene = this.add.image(600, 337.5, "chore-office-story-card");
     scene.setScale(Math.max(1200 / scene.width, 675 / scene.height));
-    const shade = this.add.graphics();
-    shade.fillGradientStyle(0x101916, 0x101916, 0x101916, 0x101916, 0, 0, 0.68, 0.68)
-      .fillRect(0, 390, 1200, 285);
-    this.layer.add([scene, shade]);
-    this.text(600, 465, "雜役處", 42, "#f1e7ce");
-    this.text(600, 515, "同門依序排在窗口前，等候執事分派差事。", 21, "#e6dfcf");
-    this.button(600, 590, "繼續", () => this.showChoreOfficeReceipt(), 240);
+    const titleShade = this.add.rectangle(600, 337.5, 1200, 675, 0x0d1715, 0.16);
+    const title = this.add.text(600, 338, "雜役處", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "44px",
+      color: "#f1e7ce",
+      letterSpacing: 12,
+    }).setOrigin(0.5).setAlpha(0);
+    this.layer.add([scene, titleShade, title]);
+    this.tweens.add({
+      targets: title,
+      alpha: 1,
+      duration: 1100,
+      ease: "Sine.inOut",
+      onComplete: () => this.time.delayedCall(900, () => this.tweens.add({
+        targets: [title, titleShade],
+        alpha: 0,
+        duration: 1000,
+        ease: "Sine.inOut",
+        onComplete: () => this.showChoreOfficeReceipt(),
+      })),
+    });
   }
 
   private showChoreOfficeReceipt() {
     this.resetLandscape();
     const scene = this.add.image(600, 337.5, "chore-office-story-card");
-    scene.setScale(Math.max(1200 / scene.width, 675 / scene.height)).setAlpha(0.72);
-    const panel = this.add.graphics();
-    panel.fillStyle(0xf1eadb, 0.96).fillRect(170, 430, 860, 185);
-    panel.lineStyle(1, 0x75654f, 0.62).strokeRect(170, 430, 860, 185);
-    panel.lineStyle(1, 0x75654f, 0.35).lineBetween(205, 482, 995, 482);
-    this.layer.add([scene, panel]);
-    this.text(255, 458, "雜役處執事", 20, "#72552f");
-    this.text(600, 525, "執事將一本《納氣訣》推到桌前。", 24, "#2e332f");
-    this.button(600, 580, "收下《納氣訣》", () => {
-      this.startDailyMusic();
-      this.showActivities();
-    }, 280);
+    scene.setScale(Math.max(1200 / scene.width, 675 / scene.height));
+    const dialogue = this.add.container(0, 0).setAlpha(0);
+    const dialoguePanel = this.add.image(600, 568, "xuan-dialogue-panel").setDisplaySize(860, 166);
+    const nameplate = this.add.text(226, 516, "雜役處執事", {
+      fontFamily: '"Noto Serif TC", serif', fontSize: "19px", color: "#72552f",
+    });
+    const nameRule = this.add.rectangle(226, 546, this.dialogueNameRuleWidth(nameplate.text), 1, 0x8d7655, 0.68).setOrigin(0, 0.5);
+    const line = this.add.text(226, 558, "", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "22px",
+      color: "#20312e",
+      wordWrap: { width: 520 },
+      lineSpacing: 9,
+    });
+    const nextLineHint = this.add.text(958, 611, "（下一句……）", {
+      fontFamily: '"Noto Serif TC", serif',
+      fontSize: "15px",
+      color: "#806a49",
+    }).setOrigin(1, 0.5).setAlpha(0);
+    const steward = this.add.image(992, 586, "outer-sect-steward-portrait")
+      .setDisplaySize(205, 205)
+      .setOrigin(1, 1);
+    const dialogueHit = this.add.zone(600, 568, 860, 166).setInteractive({ useHandCursor: true });
+    dialogue.add([dialoguePanel, nameplate, nameRule, line, steward, nextLineHint, dialogueHit]);
+    this.layer.add([scene, dialogue]);
+
+    const lines = [
+      "你就是新來的雜役弟子……？",
+      "這裡有本《清心訣》。",
+      "宗門人人都有，是最低階的功法。",
+      "先砍竹去，空下來再自己參悟，修為夠了自然能引氣入體。",
+    ].map((value) => this.dialogueLineText(value));
+    let lineIndex = 0;
+    let typingEvent: Phaser.Time.TimerEvent | undefined;
+    let lineComplete = false;
+    const typeLine = () => {
+      const characters = Array.from(lines[lineIndex]);
+      let visible = 0;
+      lineComplete = false;
+      nextLineHint.setAlpha(0);
+      line.setText("");
+      typingEvent?.remove(false);
+      typingEvent = this.time.addEvent({
+        delay: 110,
+        repeat: characters.length - 1,
+        callback: () => {
+          visible += 1;
+          line.setText(characters.slice(0, visible).join(""));
+          if (visible >= characters.length) {
+            lineComplete = true;
+            nextLineHint.setAlpha(1);
+          }
+        },
+      });
+    };
+    dialogueHit.on("pointerup", () => {
+      if (!lineComplete) {
+        typingEvent?.remove(false);
+        line.setText(lines[lineIndex]);
+        lineComplete = true;
+        nextLineHint.setAlpha(1);
+        return;
+      }
+      lineIndex += 1;
+      if (lineIndex < lines.length) {
+        typeLine();
+        return;
+      }
+      dialogueHit.disableInteractive();
+      nextLineHint.setAlpha(0);
+      this.tweens.add({
+        targets: dialogue,
+        alpha: 0,
+        duration: 520,
+        onComplete: () => {
+          this.startDailyMusic();
+          this.playBambooTask();
+        },
+      });
+    });
+    this.tweens.add({
+      targets: dialogue,
+      alpha: 1,
+      duration: 520,
+      delay: 280,
+      onComplete: typeLine,
+    });
   }
 
   private showActivities() {
@@ -1013,12 +1493,22 @@ export class OpeningScene extends Phaser.Scene {
 
   private grantTaskCultivation(task: string, score: number, success = true) {
     const normalizedScore = Phaser.Math.Clamp(Math.ceil(score), 0, 100);
-    const gain = Math.ceil(12 + normalizedScore * 0.36);
+    const baseGain = Math.ceil(12 + normalizedScore * 0.36);
+    const { reward: gain } = this.applyGameProficiency(task, baseGain);
     const cap = this.player.realm === "qi" ? REALMS.qi.cultivation[8] : this.cultivationTarget();
     this.player.cultivation = Math.min(cap, this.player.cultivation + gain);
     this.recordActivity(task, gain);
     this.saveGame();
     this.showTaskResult(task, gain, normalizedScore, success);
+  }
+
+  private applyGameProficiency(task: string, baseReward: number) {
+    const proficiency = (this.player.gameProficiency[task] ?? 0) + 10;
+    this.player.gameProficiency[task] = proficiency;
+    return {
+      proficiency,
+      reward: Math.round(baseReward * (1 + proficiency / 100)),
+    };
   }
 
   private timeLabel() {
@@ -1044,38 +1534,69 @@ export class OpeningScene extends Phaser.Scene {
     const background = this.add.image(600, 337.5, "bamboo-minigame-bg").setDisplaySize(1200, 675);
     const atmosphere = this.add.image(600, 337.5, "title-mist-1")
       .setDisplaySize(760, 250).setAlpha(0.08).setBlendMode(Phaser.BlendModes.SCREEN);
-    const character = this.add.image(755, 405, this.player.gender === "male" ? "player-bamboo-male" : "player-bamboo-female");
-    character.setScale(Math.min(265 / character.width, 360 / character.height)).setOrigin(0.5, 0.72);
+    const chopFrames = Array.from(
+      { length: 5 },
+      (_, index) => `player-bamboo-${this.player.gender === "male" ? "male" : "female"}-chop-${index + 1}`,
+    );
+    const character = this.add.image(625, 430, chopFrames[0]);
+    character.setScale(Math.min(335 / character.width, 455 / character.height)).setOrigin(0.5, 0.72);
+    const impactFx = this.add.image(438, 462, "bamboo-axe-impact")
+      .setDisplaySize(190, 190)
+      .setBlendMode(Phaser.BlendModes.SCREEN)
+      .setAlpha(0);
     const effectLayer = this.add.graphics();
     const ringLayer = this.add.graphics();
     const timeBar = this.add.graphics();
     const hudPaper = this.add.graphics();
-    hudPaper.fillStyle(0xeee6d4, 0.9).fillRoundedRect(36, 198, 250, 190, 7);
-    hudPaper.lineStyle(1, 0x75654f, 0.55).strokeRoundedRect(36, 198, 250, 190, 7);
-    hudPaper.fillStyle(0xeee6d4, 0.9).fillRoundedRect(36, 401, 250, 102, 7);
-    hudPaper.lineStyle(1, 0x75654f, 0.55).strokeRoundedRect(36, 401, 250, 102, 7);
-    this.layer.add([background, atmosphere, character, effectLayer, ringLayer, timeBar, hudPaper]);
+    hudPaper.fillStyle(0xeee6d4, 0.92).fillRoundedRect(38, 150, 238, 164, 6);
+    hudPaper.lineStyle(1, 0x75654f, 0.55).strokeRoundedRect(38, 150, 238, 164, 6);
+    hudPaper.fillStyle(0x111a18, 0.72).fillRoundedRect(38, 326, 238, 126, 5);
+    this.layer.add([background, atmosphere, character, impactFx, effectLayer, ringLayer, timeBar, hudPaper]);
     this.tweens.add({ targets: atmosphere, x: 660, alpha: 0.13, duration: 6200, yoyo: true, repeat: -1 });
 
     const controller = new BambooGameController();
-    const targetX = 398;
-    const targetY = 470;
+    const targetX = 438;
+    const targetY = 462;
+    const chargeGauge = new CircularChargeGauge(this, this.layer, {
+      x: targetX,
+      y: targetY,
+      radius: BAMBOO_GAME_CONFIG.targetRadius,
+      resetDurationMs: BAMBOO_GAME_CONFIG.nextRoundDelayMs,
+    });
     const inputZone = this.add.zone(600, 337.5, 1200, 675).setInteractive({ useHandCursor: true });
     this.layer.add(inputZone);
 
-    const timeLabel = this.text(600, 38, "時間 30", 24, "#f1ead7");
-    const cultivationLabel = this.text(1025, 38, "本局修為 10", 21, "#f1ead7");
-    const comboLabel = this.text(1060, 130, "連擊 0", 30, "#e8d08b");
-    const progressLabel = this.text(160, 270, `砍竹\n砍十根竹子\n進度：0 / ${BAMBOO_GAME_CONFIG.goalCount}`, 22, "#2d352f");
-    progressLabel.setLineSpacing(12);
-    const rewardLabel = this.text(160, 450, "修為 +10\n今日剩餘 3 次修行", 19, "#35453f");
-    rewardLabel.setLineSpacing(10);
-    const guide = this.text(600, 625, "凝神調息，在氣與刃合一之時落斧。", 21, "#f4ead2");
+    const timeLabel = this.text(600, 66, "3", 28, "#f1ead7");
+    const countdownBacking = this.add.rectangle(600, 66, 400, 44, 0x0d1513, 0.76);
+    this.layer.addAt(countdownBacking, Math.max(0, this.layer.getIndex(timeLabel) - 1));
+    const comboInk = this.add.image(1050, 158, "bamboo-combo-ink-backing")
+      .setDisplaySize(257, 90)
+      .setAlpha(0);
+    const comboTitle = this.add.image(1050, 158, "bamboo-combo-calligraphy")
+      .setDisplaySize(97, 45)
+      .setAlpha(0);
+    this.layer.add([comboInk, comboTitle]);
+    const comboCounter = new ComboCounter(this, this.layer, 1050, 232);
+    comboCounter.setCombo(0);
+    this.text(157, 181, `砍竹（熟練度：${this.player.gameProficiency["砍竹"] ?? 0}%）`, 22, "#27322d");
+    const progressLabel = this.text(157, 250, `修為 +30\n竹子數量：0/${BAMBOO_GAME_CONFIG.goalCount}\n今日剩餘修行次數：${Math.max(0, 2 - this.player.timeSlot)}`, 18, "#2d352f");
+    progressLabel.setLineSpacing(7);
+    const realmText = this.player.realm === "uninitiated"
+      ? this.player.identity
+      : `${this.player.identity}　${this.player.realm === "qi" ? `練氣${this.player.level}層` : `筑基${this.player.level}層`}`;
+    const cultivationStatus = this.text(
+      157,
+      385,
+      `${realmText}\n當前修為\n${this.player.cultivation}/${this.cultivationTarget()}`,
+      18,
+      "#eee3ca",
+    );
+    cultivationStatus.setLineSpacing(8);
+    const guideBacking = this.add.rectangle(600, 630, 680, 46, 0x0d1513, 0.68);
+    const guide = this.text(600, 630, "在光圈填滿之時落斧。", 20, "#f4ead2");
+    this.layer.addAt(guideBacking, Math.max(0, this.layer.getIndex(guide) - 1));
     const judgementLabel = this.text(targetX, targetY - 115, "", 30, "#e9ca74").setAlpha(0);
-    const countdown = this.text(600, 315, "3", 82, "#f4e8ca");
 
-    const back = this.text(70, 48, "←\n返回", 19, "#f1e5cc").setInteractive({ useHandCursor: true });
-    const pause = this.text(1085, 50, "暫停", 19, "#f1e5cc").setInteractive({ useHandCursor: true });
     const finishEarly = this.text(1070, 605, "收式", 23, "#2f3b35").setInteractive({ useHandCursor: true });
     const modal = this.add.container(0, 0).setDepth(80).setVisible(false);
     this.layer.add(modal);
@@ -1085,6 +1606,8 @@ export class OpeningScene extends Phaser.Scene {
     const cleanup = () => {
       this.events.off(Phaser.Scenes.Events.UPDATE, update);
       this.input.keyboard?.off("keydown-SPACE", handleInput);
+      this.activeGameplayPause = undefined;
+      this.activeGameplayResume = undefined;
     };
     const showResult = (rewardMode: "normal" | "minimum" | "proportional" = "normal") => {
       if (finalized) return;
@@ -1092,16 +1615,17 @@ export class OpeningScene extends Phaser.Scene {
       cleanup();
       inputZone.disableInteractive();
       const now = performance.now();
-      const reward = rewardMode === "minimum"
+      const baseReward = rewardMode === "minimum"
         ? BAMBOO_GAME_CONFIG.rewardFormula.baseCultivation
         : rewardMode === "proportional"
           ? controller.earlyCultivationReward(now)
           : controller.cultivationReward();
+      const { reward, proficiency } = this.applyGameProficiency("砍竹", baseReward);
       const cap = this.player.realm === "qi" ? REALMS.qi.cultivation[8] : this.cultivationTarget();
       this.player.cultivation = Math.min(cap, this.player.cultivation + reward);
       this.recordActivity("砍竹", reward);
       this.saveGame();
-      this.showBambooTaskResult(controller, reward);
+      this.showBambooTaskResult(controller, reward, proficiency, baseReward);
     };
     const closeModal = () => {
       modal.removeAll(true);
@@ -1153,34 +1677,69 @@ export class OpeningScene extends Phaser.Scene {
       modal.add([dim, paper, title, primary, secondary]);
     };
 
+    this.activeGameplayPause = () => controller.pause(performance.now());
+    this.activeGameplayResume = () => controller.resume(performance.now());
+    this.selectionCornerControl("back", () => openModal("quit"));
+    this.selectionCornerControl("settings", undefined, () => this.toggleSystemMenu());
+
+    let chopSequenceId = 0;
+    const playChopAnimation = () => {
+      chopSequenceId += 1;
+      const sequence = chopSequenceId;
+      this.sound.play("bamboo-axe-swing-sfx", { volume: 0.42, rate: 1.2 });
+      chopFrames.forEach((frame, index) => {
+        this.time.delayedCall(index * 62, () => {
+          if (character.active && sequence === chopSequenceId) character.setTexture(frame);
+        });
+      });
+      this.time.delayedCall(360, () => {
+        if (character.active && sequence === chopSequenceId) character.setTexture(chopFrames[0]);
+      });
+    };
+
     const displayJudgement = (judgement: BambooJudgement) => {
       judgementLabel.setText(BAMBOO_GAME_CONFIG.labels[judgement]);
       judgementLabel.setColor(judgement === "PERFECT" ? "#f0ca6a" : judgement === "MISS" ? "#d5c8b3" : "#e8dfc9");
       judgementLabel.setAlpha(1).setY(targetY - 95).setScale(judgement === "PERFECT" ? 1.12 : 1);
       this.tweens.add({ targets: judgementLabel, y: targetY - 135, alpha: 0, duration: 620, ease: "Sine.out" });
       if (judgement !== "MISS") {
-        this.tweens.add({ targets: character, x: 725, angle: -2, duration: 105, yoyo: true, ease: "Quad.out" });
-        effectLayer.clear().lineStyle(judgement === "PERFECT" ? 8 : 4, 0xffe09a, judgement === "PERFECT" ? 0.95 : 0.7)
-          .lineBetween(targetX - 65, targetY + 20, targetX + 72, targetY - 28);
-        this.time.delayedCall(130, () => effectLayer.clear());
+        this.time.delayedCall(165, () => {
+          if (!this.scene.isActive()) return;
+          this.sound.play("bamboo-axe-hit-sfx", { volume: 0.58, rate: judgement === "PERFECT" ? 0.96 : 1.06 });
+          if (judgement === "PERFECT") {
+            this.sound.play("bamboo-axe-perfect-sfx", { volume: 0.48, rate: 0.92 });
+          }
+        });
+        impactFx.setAlpha(judgement === "PERFECT" ? 1 : 0.72)
+          .setScale(judgement === "PERFECT" ? 0.17 : 0.14)
+          .setAngle(-8);
+        this.tweens.add({
+          targets: impactFx,
+          alpha: 0,
+          scaleX: judgement === "PERFECT" ? 0.23 : 0.19,
+          scaleY: judgement === "PERFECT" ? 0.23 : 0.19,
+          duration: 300,
+          ease: "Quad.out",
+        });
         if (judgement === "PERFECT") this.cameras.main.shake(90, 0.0018);
       }
-      if (controller.stats.combo > 0) {
-        this.tweens.add({ targets: comboLabel, scale: 1.18, duration: 90, yoyo: true });
-      }
-      comboLabel.setText(`連擊 ${controller.stats.combo}`);
-      progressLabel.setText(`砍竹\n砍十根竹子\n進度：${Math.min(controller.stats.strikes, BAMBOO_GAME_CONFIG.goalCount)} / ${BAMBOO_GAME_CONFIG.goalCount}`);
-      cultivationLabel.setText(`本局修為 ${controller.cultivationReward()}`);
-      rewardLabel.setText(`修為 +${controller.cultivationReward()}\n今日剩餘 3 次修行`);
+      const comboActive = controller.stats.combo > 0;
+      comboInk.setAlpha(comboActive ? 0.94 : 0);
+      comboTitle.setAlpha(comboActive ? 1 : 0);
+      comboCounter.setCombo(controller.stats.combo);
+      const completed = Math.min(controller.stats.strikes, BAMBOO_GAME_CONFIG.goalCount);
+      const excess = Math.max(0, controller.stats.strikes - BAMBOO_GAME_CONFIG.goalCount);
+      progressLabel.setText(
+        `修為 +30\n竹子數量：${completed}/${BAMBOO_GAME_CONFIG.goalCount}${excess > 0 ? `\n超額完成：${excess}` : ""}\n今日剩餘修行次數：${Math.max(0, 2 - this.player.timeSlot)}`,
+      );
     };
     const handleInput = () => {
+      playChopAnimation();
       const judgement = controller.input(performance.now());
       if (judgement) displayJudgement(judgement);
     };
     inputZone.on("pointerdown", handleInput);
     this.input.keyboard?.on("keydown-SPACE", handleInput);
-    back.on("pointerup", () => openModal("quit"));
-    pause.on("pointerup", () => openModal("pause"));
     finishEarly.on("pointerup", () => openModal("finish"));
 
     const update = () => {
@@ -1193,21 +1752,16 @@ export class OpeningScene extends Phaser.Scene {
       }
       if (event) displayJudgement(event);
       const snapshot = controller.snapshot(now);
+      chargeGauge.update(snapshot.cycleProgress, now, snapshot.state === "paused");
+      comboCounter.setPaused(snapshot.state === "paused");
       if (snapshot.state !== "playing") return;
       const remaining = Math.ceil(snapshot.remainingMs / 1000);
       timeLabel.setText(`時間 ${remaining}`);
       const timeRatio = snapshot.remainingMs / BAMBOO_GAME_CONFIG.roundDurationMs;
       timeBar.clear()
-        .fillStyle(0x17231f, 0.64).fillRoundedRect(430, 62, 340, 13, 6)
-        .fillStyle(0x426f58, 0.96).fillRoundedRect(433, 65, 334 * Math.max(0, timeRatio), 7, 3);
-      const radius = Phaser.Math.Linear(
-        BAMBOO_GAME_CONFIG.ringStartRadius,
-        BAMBOO_GAME_CONFIG.targetRadius,
-        snapshot.cycleProgress,
-      );
-      ringLayer.clear()
-        .lineStyle(4, 0xe5d2a0, 0.78).strokeCircle(targetX, targetY, BAMBOO_GAME_CONFIG.targetRadius)
-        .lineStyle(5, 0x76a985, 0.9).strokeCircle(targetX, targetY, radius);
+        .fillStyle(0x111a18, 0.78).fillRoundedRect(400, 44, 400, 44, 14)
+        .fillStyle(0x426f58, 0.96).fillRoundedRect(405, 49, 390 * Math.max(0, timeRatio), 34, 10);
+      ringLayer.clear();
     };
     this.events.on(Phaser.Scenes.Events.UPDATE, update);
 
@@ -1218,34 +1772,84 @@ export class OpeningScene extends Phaser.Scene {
       callback: () => {
         count -= 1;
         if (count > 0) {
-          countdown.setText(String(count)).setScale(1.15);
-          this.tweens.add({ targets: countdown, scale: 1, duration: 240 });
+          timeLabel.setText(String(count)).setScale(1.15);
+          this.tweens.add({ targets: timeLabel, scale: 1, duration: 240 });
         } else {
-          countdown.setText("開始");
-          this.tweens.add({ targets: countdown, alpha: 0, duration: 420, onComplete: () => countdown.destroy() });
+          timeLabel.setText("開始").setScale(1.12);
+          this.tweens.add({ targets: timeLabel, scale: 1, duration: 320 });
           controller.begin(performance.now());
+          this.tweens.add({
+            targets: countdownBacking,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => countdownBacking.destroy(),
+          });
+          this.time.delayedCall(360, () => timeLabel.active && timeLabel.setText("時間 30"));
         }
       },
     });
     countdownEvent.paused = false;
   }
 
-  private showBambooTaskResult(controller: BambooGameController, reward: number) {
+  private showBambooTaskResult(
+    controller: BambooGameController,
+    reward: number,
+    proficiency: number,
+    baseReward: number,
+  ) {
     this.resetLandscape();
     const background = this.add.image(600, 337.5, "bamboo-minigame-bg").setDisplaySize(1200, 675).setAlpha(0.58);
-    const shade = this.add.rectangle(600, 337.5, 1200, 675, 0x14211e, 0.36);
-    this.layer.add([background, shade]);
-    this.text(600, 75, "修行完成", 42, "#f2e7cf");
-    this.text(425, 180, `砍竹次數  ${controller.stats.strikes}`, 22, "#eee4d0");
-    this.text(425, 225, `人刃合一  ${controller.stats.perfect}`, 22, "#e9cb78");
-    this.text(425, 270, `運勁得宜  ${controller.stats.good}`, 22, "#eee4d0");
-    this.text(775, 180, `勉強斬中  ${controller.stats.normal}`, 22, "#eee4d0");
-    this.text(775, 225, `氣息紊亂  ${controller.stats.miss}`, 22, "#d8cec0");
-    this.text(775, 270, `最高連擊  ${controller.stats.maxCombo}`, 22, "#e9cb78");
-    this.text(600, 350, `獲得修為  +${reward}`, 29, "#e9cb78");
-    this.text(600, 405, `熟練度  ${controller.proficiency()}%`, 23, "#d6e4da");
-    this.button(465, 535, "再次修行", () => this.playBambooTask(), 220);
-    this.button(735, 535, "返回竹林", () => this.showMainMenu(), 220);
+    const shade = this.add.rectangle(600, 337.5, 1200, 675, 0x070c0b, 0.64);
+    const resultBacking = this.add.image(600, 342, "shared-result-panel").setDisplaySize(820, 510);
+    this.layer.add([background, shade, resultBacking]);
+    const title = this.text(600, 146, "修行完成", 42, "#30342f");
+    const rowData: Array<[string, string, number, string]> = [
+      ["人刃合一", String(controller.stats.perfect), 214, "#9a752b"],
+      ["運勁得宜", String(controller.stats.good), 248, "#333b37"],
+      ["勉強斬中", String(controller.stats.normal), 281, "#333b37"],
+      ["氣息紊亂", String(controller.stats.miss), 314, "#4d514d"],
+      ["總砍竹次數", String(controller.stats.strikes), 348, "#333b37"],
+      ["最高連擊", String(controller.stats.maxCombo), 380, "#9a752b"],
+      ["獲得基本修為", `${reward}（${proficiency}% 熟練）`, 414, "#9a752b"],
+      ["額外修為", String(Math.max(0, reward - Math.round(baseReward * (1 + proficiency / 100)))), 447, "#333b37"],
+    ];
+    const rows: Phaser.GameObjects.Text[][] = [[title]];
+    rowData.forEach(([label, value, y, color]) => {
+      const labelText = this.text(355, y, label, 23, color).setOrigin(0, 0.5);
+      const valueText = this.text(665, y, value, 23, color).setOrigin(0, 0.5);
+      rows.push([labelText, valueText]);
+    });
+    rows.forEach((row, index) => {
+      const targetY = row[0].y;
+      row.forEach((item) => item.setAlpha(0).setY(targetY + 12));
+      this.tweens.add({
+        targets: row,
+        alpha: 1,
+        y: targetY,
+        duration: 420,
+        delay: 180 + index * 210,
+        ease: "Sine.out",
+      });
+    });
+    const resultButton = (x: number, label: string, action: () => void, tone: "paper" | "ink") => {
+      const backing = this.add.image(x, 527, tone === "paper" ? "s01-gold-button-frame" : "s01-selection-confirm")
+        .setDisplaySize(220, 58);
+      const normalColor = tone === "paper" ? "#303832" : "#eadfc7";
+      const caption = this.text(x, 527, label, 22, normalColor);
+      const hit = this.add.zone(x, 527, 220, 58).setInteractive({ useHandCursor: true });
+      hit.on("pointerover", () => { backing.setAlpha(0.88); caption.setColor("#b88b3f"); });
+      hit.on("pointerout", () => { backing.setAlpha(1); caption.setColor(normalColor); });
+      hit.on("pointerup", action);
+      this.layer.addAt(backing, Math.max(0, this.layer.getIndex(caption) - 1));
+      this.layer.add(hit);
+      backing.setAlpha(0);
+      caption.setAlpha(0);
+      this.tweens.add({ targets: [backing, caption], alpha: 1, duration: 260, ease: "Sine.out" });
+    };
+    this.time.delayedCall(2050, () => {
+      resultButton(470, "再次修行", () => this.playBambooTask(), "paper");
+      resultButton(730, "離開", () => this.showMainMenu(), "ink");
+    });
   }
 
   private playWaterTask() {
@@ -1331,7 +1935,7 @@ export class OpeningScene extends Phaser.Scene {
       if (finalized) return;
       finalized = true;
       cleanup();
-      const reward = WATER_CARRY_CONFIG.rewardCultivation;
+      const { reward } = this.applyGameProficiency("挑水", WATER_CARRY_CONFIG.rewardCultivation);
       const cap = this.player.realm === "qi" ? REALMS.qi.cultivation[8] : this.cultivationTarget();
       this.player.cultivation = Math.min(cap, this.player.cultivation + reward);
       this.recordActivity("挑水", reward);
@@ -1627,11 +2231,12 @@ export class OpeningScene extends Phaser.Scene {
       cleanup();
       inputZone.disableInteractive();
       const now = performance.now();
-      const reward = rewardMode === "minimum"
+      const baseReward = rewardMode === "minimum"
         ? HEART_MANUAL_CONFIG.rewardFormula.baseCultivation
         : rewardMode === "proportional"
           ? controller.earlyCultivationReward(now)
           : controller.cultivationReward();
+      const { reward } = this.applyGameProficiency("參悟心法", baseReward);
       const cap = this.player.realm === "qi" ? REALMS.qi.cultivation[8] : this.cultivationTarget();
       this.player.cultivation = Math.min(cap, this.player.cultivation + reward);
       this.recordActivity("參悟心法", reward);
