@@ -77,3 +77,12 @@
 - Codex／自動化實機驗證預設使用 `127.0.0.1:4174`。
 - 若4174已被占用，依序改用4175～4178；必須回報實際使用埠號，不得為搶埠而終止不明程序。
 - 測試完成時只可終止自己明確啟動且已核對命令列屬於本專案測試埠的程序，不得影響使用者的4173預覽。
+## NPC generation preflight
+
+Before generating or editing any NPC, read `docs/art/NPC_MODULAR_CHARACTER_STANDARD.md` and `assets-spec/characters.yaml`.
+
+- Use exactly one shared body module: adult male, adult female, or child.
+- New NPC identity may replace only head, hairstyle, outfit, and accessories.
+- Never regenerate a character or dialogue asset only to change left/right facing. Use runtime horizontal flip.
+- Keep character, dialogue backing, and text in separate layers.
+- Assemble prompts from the character YAML fields; do not improvise body proportions, camera, or lighting.

@@ -10,9 +10,12 @@ export class BambooGameController extends RhythmTimingController {
 
   cultivationReward() {
     const reward = BAMBOO_GAME_CONFIG.rewardFormula;
+    const completed = this.stats.perfect + this.stats.good + this.stats.normal;
+    const excessBonus = Math.max(0, completed - BAMBOO_GAME_CONFIG.goalCount);
     return reward.baseCultivation
       + this.stats.perfect * reward.perfectBonus
-      + this.stats.good * reward.goodBonus;
+      + this.stats.good * reward.goodBonus
+      + excessBonus;
   }
 
   earlyCultivationReward(now: number) {
@@ -20,6 +23,10 @@ export class BambooGameController extends RhythmTimingController {
       BAMBOO_GAME_CONFIG.rewardFormula.baseCultivation,
       Math.round(this.cultivationReward() * this.elapsedRatio(now)),
     );
+  }
+
+  currentCultivationReward() {
+    return this.stats.perfect * 3 + this.stats.good * 2 + this.stats.normal;
   }
 
   proficiency() {

@@ -11,6 +11,10 @@ export class WaterCarryGameController {
   private pausedAt = 0;
   private phaseBeforeConfirm: WaterCarryPhase = "playing";
 
+  startCountdown() {
+    if (this.phase === "ready") this.phase = "countdown";
+  }
+
   begin(now: number) {
     this.phase = "playing";
     this.endsAt = now + WATER_CARRY_CONFIG.durationSeconds * 1000;

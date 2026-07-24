@@ -310,9 +310,10 @@ img {
   filter: none;
 }
 
-.combo-counter {
-  width: clamp(88px, 10vw, 130px);
-  min-width: 4ch;
+.streak-counter {
+  position: relative;
+  width: 257px;
+  height: 175px;
   color: rgb(239 229 199 / 94%);
   text-align: center;
   pointer-events: none;
@@ -320,49 +321,75 @@ img {
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
-.combo-counter--active {
+.streak-counter--active {
   visibility: visible;
   opacity: 1;
   transform: translateY(0);
 }
 
-.combo-counter--inactive {
+.streak-counter--inactive {
   visibility: hidden;
   opacity: 0;
   transform: translateY(5px);
 }
 
-.combo-counter__number-wrap {
+.streak-counter__ink,
+.streak-counter__label {
+  position: absolute;
+  left: 50%;
+  display: block;
+  object-fit: contain;
+  transform: translateX(-50%);
+}
+
+.streak-counter__ink {
+  top: 0;
+  width: 257px;
+  height: 90px;
+  opacity: 0.94;
+}
+
+.streak-counter__label {
+  top: 11px;
+  width: 97px;
+  height: 45px;
+}
+
+.streak-counter__number-wrap {
+  position: absolute;
+  top: 64px;
+  left: 0;
   display: grid;
   place-items: center;
+  width: 100%;
   min-width: 4ch;
-  min-height: clamp(68px, 6vw, 98px);
+  min-height: 98px;
   margin-top: 0;
 }
 
-.combo-counter__number {
+.streak-counter__number {
   color: #dfb968;
   font: 700 clamp(58px, 6.2vw, 96px) / 1 "Noto Serif TC", "Source Han Serif TC", serif;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.045em;
   text-shadow: 0 2px 2px rgb(12 20 18 / 48%), 0 0 7px rgb(218 181 102 / 23%);
-  animation: combo-number-enter 220ms cubic-bezier(0.2, 0.85, 0.28, 1);
+  animation: streak-number-enter 220ms cubic-bezier(0.2, 0.85, 0.28, 1);
 }
 
-.combo-counter--medium .combo-counter__number {
+.streak-counter--medium .streak-counter__number {
   color: #e4bd6a;
 }
 
-.combo-counter--high .combo-counter__number {
+.streak-counter--high .streak-counter__number {
   color: #edcb7e;
   filter: drop-shadow(0 0 4px rgb(226 190 111 / 28%));
 }
 
-.combo-counter--paused .combo-counter__number {
+.streak-counter--paused .streak-counter__number {
   animation-play-state: paused;
 }
 
-@keyframes combo-number-enter {
+@keyframes streak-number-enter {
   0% {
     opacity: 0;
     transform: translateY(10px) scale(0.76);
@@ -379,17 +406,70 @@ img {
   }
 }
 
-@media (max-width: 900px) {
-  .combo-counter {
-    width: 88px;
+@media (prefers-reduced-motion: reduce) {
+  .streak-counter,
+  .streak-counter__number {
+    animation: none;
+    transition: none;
   }
+}
 
+.cultivation-countdown {
+  min-width: 140px;
+  color: rgb(238 230 205 / 96%);
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  padding: 8px 20px 10px;
+  border-radius: 4px;
+  background: rgb(8 16 14 / 54%);
+  box-shadow: 0 2px 14px rgb(5 10 9 / 34%);
+  backdrop-filter: blur(1px);
+}
+
+.cultivation-countdown__label,
+.cultivation-countdown__final {
+  font: 500 clamp(24px, 2.2vw, 38px) / 1.25 "Noto Serif TC", "Source Han Serif TC", serif;
+  letter-spacing: 0.18em;
+  text-shadow:
+    0 2px 3px rgb(8 14 12 / 90%),
+    1px 0 1px rgb(8 14 12 / 72%),
+    -1px 0 1px rgb(8 14 12 / 72%);
+}
+
+.cultivation-countdown__step {
+  animation: cultivation-countdown-enter var(--countdown-step-duration) ease-in-out both;
+}
+
+.cultivation-countdown__final {
+  animation: cultivation-countdown-final 220ms ease-out both;
+}
+
+.cultivation-countdown--paused *,
+.cultivation-countdown--paused *::before,
+.cultivation-countdown--paused *::after {
+  animation-play-state: paused !important;
+}
+
+.cultivation-countdown--leaving {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+@keyframes cultivation-countdown-enter {
+  0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+  25%, 72% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-5px) scale(1.015); }
+}
+
+@keyframes cultivation-countdown-final {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .combo-counter,
-  .combo-counter__number {
+  .cultivation-countdown__step,
+  .cultivation-countdown__final {
     animation: none;
-    transition: none;
   }
 }

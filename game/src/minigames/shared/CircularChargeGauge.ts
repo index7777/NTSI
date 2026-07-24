@@ -4,7 +4,6 @@ export interface CircularChargeGaugeOptions {
   x: number;
   y: number;
   radius?: number;
-  resetDurationMs?: number;
   onChargeComplete?: () => void;
 }
 
@@ -14,12 +13,9 @@ export class CircularChargeGauge {
   private readonly x: number;
   private readonly y: number;
   private readonly radius: number;
-  private readonly resetDurationMs: number;
   private readonly onChargeComplete?: () => void;
   private lastRawProgress = 0;
   private displayedProgress = 0;
-  private resetStartedAt = 0;
-  private resetFrom = 0;
   private completeLocked = false;
 
   constructor(
@@ -30,7 +26,6 @@ export class CircularChargeGauge {
     this.x = options.x;
     this.y = options.y;
     this.radius = options.radius ?? 58;
-    this.resetDurationMs = options.resetDurationMs ?? 220;
     this.onChargeComplete = options.onChargeComplete;
     this.graphics = scene.add.graphics();
     this.label = scene.add.text(this.x, this.y, "0%", {
@@ -44,29 +39,17 @@ export class CircularChargeGauge {
 
   update(rawProgress: number, now: number, paused: boolean) {
     const progress = Phaser.Math.Clamp(rawProgress, 0, 1);
-    if (!paused && progress + 0.5 < this.lastRawProgress) {
-      this.resetStartedAt = now;
-      this.resetFrom = Math.max(this.displayedProgress, this.lastRawProgress);
-    }
+    const restarted = progress + 0.5 < this.lastRawProgress;
     this.lastRawProgress = progress;
     if (progress >= 1 && !this.completeLocked) {
       this.completeLocked = true;
       this.onChargeComplete?.();
     }
-    if (progress <= 0.001 && this.resetStartedAt === 0) {
+    if (progress <= 0.001) {
       this.completeLocked = false;
     }
 
-    if (!paused && this.resetStartedAt > 0) {
-      const elapsed = now - this.resetStartedAt;
-      const t = Phaser.Math.Clamp(elapsed / this.resetDurationMs, 0, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      this.displayedProgress = this.resetFrom * (1 - eased);
-      if (t >= 1) {
-        this.resetStartedAt = 0;
-        this.displayedProgress = progress;
-      }
-    } else if (!paused) {
+    if (!paused || restarted) {
       this.displayedProgress = progress;
     }
 

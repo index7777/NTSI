@@ -1,11 +1,12 @@
 export type RhythmJudgement = "PERFECT" | "GOOD" | "NORMAL" | "MISS";
-export type RhythmGameState = "ready" | "playing" | "paused" | "finished" | "quitConfirm";
+export type RhythmGameState = "ready" | "countdown" | "playing" | "paused" | "finished" | "quitConfirm";
 
 export interface RhythmTimingConfig {
   roundDurationMs: number;
   timingWindows: { PERFECT: number; GOOD: number; NORMAL: number };
   scoreValues: Record<RhythmJudgement, number>;
   comboSpeedTable: readonly { minCombo: number; intervalMs: number }[];
+  streakAccelerationEnabled?: boolean;
   minIntervalMs: number;
   randomVariationMs: number;
   nextRoundDelayMs: number;
@@ -41,6 +42,10 @@ export class RhythmTimingController {
 
   constructor(config: RhythmTimingConfig) {
     this.config = config;
+  }
+
+  startCountdown() {
+    if (this.state === "ready") this.state = "countdown";
   }
 
   begin(now: number) {
@@ -128,6 +133,10 @@ export class RhythmTimingController {
   }
 
   protected intervalForCombo() {
+    if (this.config.streakAccelerationEnabled === false) {
+      const base = this.config.comboSpeedTable.find((row) => row.minCombo === 0);
+      return base?.intervalMs ?? this.config.minIntervalMs;
+    }
     const entry = this.config.comboSpeedTable.find((row) => this.stats.combo >= row.minCombo);
     return Math.max(this.config.minIntervalMs, entry?.intervalMs ?? this.config.minIntervalMs);
   }

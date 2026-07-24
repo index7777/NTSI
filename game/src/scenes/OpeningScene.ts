@@ -20,8 +20,12 @@ import { HeartManualGameController } from "../minigames/heart-manual/HeartManual
 import { HEART_MANUAL_CONFIG } from "../minigames/heart-manual/config";
 import type { RhythmJudgement } from "../minigames/shared/RhythmTimingController";
 import { CircularChargeGauge } from "../minigames/shared/CircularChargeGauge";
-import { ComboCounter } from "../minigames/shared/ComboCounter";
+import { CultivationCountdownOverlay } from "../minigames/shared/CultivationCountdownOverlay";
+import { CultivationGameHUD } from "../minigames/shared/CultivationGameHUD";
+import { CultivationResultPanel } from "../minigames/shared/CultivationResultPanel";
+import { StreakCounter, type StreakTier } from "../minigames/shared/StreakCounter";
 import { WaterCarryGameController } from "../minigames/water-carry/WaterCarryGameController";
+import { SceneIntroductionOverlay } from "../ui/SceneIntroductionOverlay";
 import { WATER_CARRY_CONFIG, type BalanceZone } from "../minigames/water-carry/config";
 
 type Gender = "male" | "female";
@@ -40,6 +44,8 @@ interface PlayerState {
   foundationComponent: Record<Attribute, number>;
   foundationPills: number;
   metLiuRuyan: boolean;
+  bambooGuideId: "mu-qingli" | "liu-ruyan" | null;
+  bambooGuidePraiseSeen: boolean;
   breathingTutorialComplete: boolean;
   foundationLessonSeen: boolean;
   sectDay: number;
@@ -95,6 +101,7 @@ export class OpeningScene extends Phaser.Scene {
   private currentBgm?: Phaser.Sound.BaseSound;
   private readonly fadeTimers = new Map<Phaser.Sound.BaseSound, number>();
   private musicMode: "none" | "menu" | "game-start" | "daily" = "none";
+  private musicMuted = false;
   private playtimeCheckpoint = Date.now();
   private systemOverlay?: Phaser.GameObjects.Container;
   private titleSettingsOverlay?: Phaser.GameObjects.Container;
@@ -115,6 +122,8 @@ export class OpeningScene extends Phaser.Scene {
     foundationComponent: { spirit: 0, bone: 0, body: 0, sense: 0 },
     foundationPills: 0,
     metLiuRuyan: false,
+    bambooGuideId: null,
+    bambooGuidePraiseSeen: false,
     breathingTutorialComplete: false,
     foundationLessonSeen: false,
     sectDay: 1,
@@ -158,8 +167,9 @@ export class OpeningScene extends Phaser.Scene {
     this.load.image("player-bamboo-female-chop-4", "assets/characters/bamboo-actions/player-female-axe-chop-frame-4-v1.png");
     this.load.image("player-bamboo-female-chop-5", "assets/characters/bamboo-actions/player-female-axe-chop-frame-5-v1.png");
     this.load.image("bamboo-axe-impact", "assets/vfx/bamboo/bamboo-axe-impact-v1.png");
-    this.load.image("bamboo-combo-calligraphy", "assets/ui/bamboo/combo-calligraphy-gold-v1.png");
-    this.load.image("bamboo-combo-ink-backing", "assets/ui/bamboo/combo-ink-backing-v1.png");
+    this.load.image("streak-label-連擊", "assets/ui/bamboo/combo-calligraphy-gold-v1.png");
+    this.load.image("streak-label-共鳴", "assets/ui/heart-manual/resonance-calligraphy-gold-v1.png");
+    this.load.image("streak-ink-backing", "assets/ui/bamboo/combo-ink-backing-v1.png");
     this.load.image("character-selection-bg", "assets/scenes/character-selection-presect-registration-morning-v1.png");
     this.load.image("question-stone-neutral", "assets/scenes/question-stone-isolated-neutral-v2.png");
     this.load.image("question-stone-hand", "assets/ui/question-stone/hand-contact-base-v1.png");
@@ -170,11 +180,21 @@ export class OpeningScene extends Phaser.Scene {
     this.load.image("sect-elder-portrait", "assets/characters/portraits/sect-elder-serious-1024-v1.png");
     this.load.image("outer-sect-steward", "assets/characters/outer-sect-steward-v1.png");
     this.load.image("outer-sect-steward-portrait", "assets/characters/portraits/outer-sect-steward-closeup-1024-v2.png");
+    this.load.image("minigame-npc-mu-qingli", "assets/characters/mu-qingli/bamboo-guide-v1.png");
+    this.load.image("minigame-npc-liu-ruyan", "assets/characters/liu-ruyan/bamboo-guide-v1.png");
     this.load.image("xuan-dialogue-panel", "assets/ui/dialogue/xuan-dialogue-panel-v1.png");
     this.load.image("title-mist-1", "assets/vfx/kenney-particle-pack/mist-01.png");
     this.load.image("title-mist-2", "assets/vfx/kenney-particle-pack/mist-02.png");
     this.load.image("title-ink-underlay", "assets/ui/title/icon-ink-ripple-underlay-v1.png");
     this.load.image("shared-result-panel", "assets/ui/results/shared-result-panel-v1.png");
+    this.load.image("cultivation-hud-top", "assets/ui/cultivation-hud/top-hud-parchment-v1.png");
+    this.load.image("cultivation-hud-back", "assets/ui/cultivation-hud/return-arrow-v1.png");
+    this.load.image("cultivation-hud-hourglass", "assets/ui/cultivation-hud/time-hourglass-v1.png");
+    this.load.image("cultivation-hud-pause", "assets/ui/cultivation-hud/pause-ink-v1.png");
+    this.load.image("cultivation-hud-info", "assets/ui/cultivation-hud/information-parchment-v1.png");
+    this.load.image("cultivation-hud-hint", "assets/ui/cultivation-hud/bottom-hint-parchment-v1.png");
+    this.load.image("cultivation-hud-npc-info", "assets/ui/cultivation-hud/minigame-npc-information-parchment-v1.png");
+    this.load.image("cultivation-hud-right-ink", "assets/ui/cultivation-hud/right-metric-ink-v1.png");
     this.load.image("title-icon-settings", "assets/ui/title/approved-2026-07-23/settings-object-icon-v1.png");
     this.load.image("title-icon-training-record", "assets/ui/title/approved-2026-07-23/cultivation-log-object-icon-v1.png");
     this.load.image("title-icon-achievement", "assets/ui/title/approved-2026-07-23/achievement-object-icon-v1.png");
@@ -209,6 +229,7 @@ export class OpeningScene extends Phaser.Scene {
     this.layer = this.add.container(LEGACY_VIEW_X, 0).setScale(LEGACY_VIEW_SCALE);
     this.input.once("pointerdown", () => this.startLoopingMusic("menu-music", "menu"));
     this.input.keyboard?.once("keydown", () => this.startLoopingMusic("menu-music", "menu"));
+    this.sound.on(Phaser.Sound.Events.UNLOCKED, this.applyMusicMutePreference, this);
     this.input.keyboard?.on("keydown-ESC", () => this.toggleSystemMenu());
     const testScreen = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("test") : null;
     if (testScreen === "bamboo") {
@@ -224,6 +245,18 @@ export class OpeningScene extends Phaser.Scene {
       return;
     }
     this.showTitle();
+  }
+
+  private applyMusicMutePreference() {
+    this.sound.mute = this.musicMuted;
+  }
+
+  private toggleMusicMute() {
+    this.musicMuted = !this.musicMuted;
+    this.applyMusicMutePreference();
+    // The first interaction may also unlock browser audio. Re-apply the
+    // player's choice afterward so that the first click is never swallowed.
+    this.time.delayedCall(0, () => this.applyMusicMutePreference());
   }
 
   private fadeTrack(track: Phaser.Sound.BaseSound, from: number, to: number, duration: number, onComplete?: () => void) {
@@ -603,7 +636,7 @@ export class OpeningScene extends Phaser.Scene {
       zone.on("pointerup", () => { caption.setAlpha(1); action(); if (caption.active) caption.setText(label()); });
       overlay.add([caption, zone]);
     };
-    modalButton(280, () => `音樂：${this.sound.mute ? "關閉" : "開啟"}`, () => { this.sound.mute = !this.sound.mute; });
+    modalButton(280, () => `音樂：${this.musicMuted ? "關閉" : "開啟"}`, () => this.toggleMusicMute());
     modalButton(345, () => `畫面：${this.scale.isFullscreen ? "全螢幕" : "視窗化"}`, () => {
       if (this.scale.isFullscreen) this.scale.stopFullscreen(); else this.scale.startFullscreen();
     });
@@ -683,6 +716,8 @@ export class OpeningScene extends Phaser.Scene {
       foundationComponent: { spirit: 0, bone: 0, body: 0, sense: 0 },
       foundationPills: 0,
       metLiuRuyan: false,
+      bambooGuideId: null,
+      bambooGuidePraiseSeen: false,
       breathingTutorialComplete: false,
       foundationLessonSeen: false,
       sectDay: 1,
@@ -733,6 +768,8 @@ export class OpeningScene extends Phaser.Scene {
       data.player.foundationComponent ??= { spirit: 0, bone: 0, body: 0, sense: 0 };
       data.player.foundationPills ??= 0;
       data.player.metLiuRuyan ??= false;
+      data.player.bambooGuideId ??= null;
+      data.player.bambooGuidePraiseSeen ??= false;
       data.player.breathingTutorialComplete ??= data.player.realm !== "uninitiated" && data.player.level >= 2;
       data.player.foundationLessonSeen ??= false;
       data.player.sectDay ??= 1;
@@ -762,8 +799,8 @@ export class OpeningScene extends Phaser.Scene {
   private showSettingsScreen() {
     this.resetLandscape();
     this.text(600, 90, "機關", 42);
-    this.button(600, 265, this.sound.mute ? "音樂：關閉" : "音樂：開啟", () => {
-      this.sound.mute = !this.sound.mute;
+    this.button(600, 265, this.musicMuted ? "音樂：關閉" : "音樂：開啟", () => {
+      this.toggleMusicMute();
       this.showSettingsScreen();
     }, 280);
     this.button(600, 440, "返回", () => this.showMainMenu(), 240);
@@ -1315,26 +1352,10 @@ export class OpeningScene extends Phaser.Scene {
     this.resetLandscape();
     const scene = this.add.image(600, 337.5, "chore-office-story-card");
     scene.setScale(Math.max(1200 / scene.width, 675 / scene.height));
-    const titleShade = this.add.rectangle(600, 337.5, 1200, 675, 0x0d1715, 0.16);
-    const title = this.add.text(600, 338, "雜役處", {
-      fontFamily: '"Noto Serif TC", serif',
-      fontSize: "44px",
-      color: "#f1e7ce",
-      letterSpacing: 12,
-    }).setOrigin(0.5).setAlpha(0);
-    this.layer.add([scene, titleShade, title]);
-    this.tweens.add({
-      targets: title,
-      alpha: 1,
-      duration: 1100,
-      ease: "Sine.inOut",
-      onComplete: () => this.time.delayedCall(900, () => this.tweens.add({
-        targets: [title, titleShade],
-        alpha: 0,
-        duration: 1000,
-        ease: "Sine.inOut",
-        onComplete: () => this.showChoreOfficeReceipt(),
-      })),
+    this.layer.add(scene);
+    new SceneIntroductionOverlay(this, this.layer).play({
+      title: "雜役處",
+      onComplete: () => this.showChoreOfficeReceipt(),
     });
   }
 
@@ -1417,7 +1438,7 @@ export class OpeningScene extends Phaser.Scene {
         duration: 520,
         onComplete: () => {
           this.startDailyMusic();
-          this.playBambooTask();
+          this.showBambooLocationIntro();
         },
       });
     });
@@ -1427,6 +1448,16 @@ export class OpeningScene extends Phaser.Scene {
       duration: 520,
       delay: 280,
       onComplete: typeLine,
+    });
+  }
+
+  private showBambooLocationIntro() {
+    this.resetLandscape();
+    const background = this.add.image(600, 337.5, "bamboo-minigame-bg").setDisplaySize(1200, 675);
+    this.layer.add(background);
+    new SceneIntroductionOverlay(this, this.layer).play({
+      title: "小竹峰山下",
+      onComplete: () => this.playBambooTask(),
     });
   }
 
@@ -1540,6 +1571,16 @@ export class OpeningScene extends Phaser.Scene {
     );
     const character = this.add.image(625, 430, chopFrames[0]);
     character.setScale(Math.min(335 / character.width, 455 / character.height)).setOrigin(0.5, 0.72);
+    const showFirstBambooGuide = !this.player.bambooGuidePraiseSeen;
+    if (showFirstBambooGuide && !this.player.bambooGuideId) {
+      this.player.bambooGuideId = Phaser.Math.Between(0, 1) === 0 ? "mu-qingli" : "liu-ruyan";
+      this.saveGame();
+    }
+    const bambooGuideId = this.player.bambooGuideId ?? "mu-qingli";
+    const bambooGuideName = bambooGuideId === "mu-qingli" ? "慕清璃" : "柳如煙";
+    const bambooGuideTexture = bambooGuideId === "mu-qingli"
+      ? "minigame-npc-mu-qingli"
+      : "minigame-npc-liu-ruyan";
     const impactFx = this.add.image(438, 462, "bamboo-axe-impact")
       .setDisplaySize(190, 190)
       .setBlendMode(Phaser.BlendModes.SCREEN)
@@ -1547,57 +1588,33 @@ export class OpeningScene extends Phaser.Scene {
     const effectLayer = this.add.graphics();
     const ringLayer = this.add.graphics();
     const timeBar = this.add.graphics();
-    const hudPaper = this.add.graphics();
-    hudPaper.fillStyle(0xeee6d4, 0.92).fillRoundedRect(38, 150, 238, 164, 6);
-    hudPaper.lineStyle(1, 0x75654f, 0.55).strokeRoundedRect(38, 150, 238, 164, 6);
-    hudPaper.fillStyle(0x111a18, 0.72).fillRoundedRect(38, 326, 238, 126, 5);
-    this.layer.add([background, atmosphere, character, impactFx, effectLayer, ringLayer, timeBar, hudPaper]);
+    this.layer.add([
+      background,
+      atmosphere,
+      character,
+      impactFx,
+      effectLayer,
+      ringLayer,
+      timeBar,
+    ]);
     this.tweens.add({ targets: atmosphere, x: 660, alpha: 0.13, duration: 6200, yoyo: true, repeat: -1 });
 
     const controller = new BambooGameController();
+    let countdown: CultivationCountdownOverlay;
     const targetX = 438;
     const targetY = 462;
     const chargeGauge = new CircularChargeGauge(this, this.layer, {
       x: targetX,
       y: targetY,
       radius: BAMBOO_GAME_CONFIG.targetRadius,
-      resetDurationMs: BAMBOO_GAME_CONFIG.nextRoundDelayMs,
     });
     const inputZone = this.add.zone(600, 337.5, 1200, 675).setInteractive({ useHandCursor: true });
     this.layer.add(inputZone);
 
-    const timeLabel = this.text(600, 66, "3", 28, "#f1ead7");
-    const countdownBacking = this.add.rectangle(600, 66, 400, 44, 0x0d1513, 0.76);
-    this.layer.addAt(countdownBacking, Math.max(0, this.layer.getIndex(timeLabel) - 1));
-    const comboInk = this.add.image(1050, 158, "bamboo-combo-ink-backing")
-      .setDisplaySize(257, 90)
-      .setAlpha(0);
-    const comboTitle = this.add.image(1050, 158, "bamboo-combo-calligraphy")
-      .setDisplaySize(97, 45)
-      .setAlpha(0);
-    this.layer.add([comboInk, comboTitle]);
-    const comboCounter = new ComboCounter(this, this.layer, 1050, 232);
-    comboCounter.setCombo(0);
-    this.text(157, 181, `砍竹（熟練度：${this.player.gameProficiency["砍竹"] ?? 0}%）`, 22, "#27322d");
-    const progressLabel = this.text(157, 250, `修為 +30\n竹子數量：0/${BAMBOO_GAME_CONFIG.goalCount}\n今日剩餘修行次數：${Math.max(0, 2 - this.player.timeSlot)}`, 18, "#2d352f");
-    progressLabel.setLineSpacing(7);
-    const realmText = this.player.realm === "uninitiated"
-      ? this.player.identity
-      : `${this.player.identity}　${this.player.realm === "qi" ? `練氣${this.player.level}層` : `筑基${this.player.level}層`}`;
-    const cultivationStatus = this.text(
-      157,
-      385,
-      `${realmText}\n當前修為\n${this.player.cultivation}/${this.cultivationTarget()}`,
-      18,
-      "#eee3ca",
-    );
-    cultivationStatus.setLineSpacing(8);
-    const guideBacking = this.add.rectangle(600, 630, 680, 46, 0x0d1513, 0.68);
-    const guide = this.text(600, 630, "在光圈填滿之時落斧。", 20, "#f4ead2");
-    this.layer.addAt(guideBacking, Math.max(0, this.layer.getIndex(guide) - 1));
+    const streakCounter = new StreakCounter(this, this.layer, 1050, 195);
+    streakCounter.setState({ label: "連擊", value: 0, tier: "normal", visible: false });
     const judgementLabel = this.text(targetX, targetY - 115, "", 30, "#e9ca74").setAlpha(0);
 
-    const finishEarly = this.text(1070, 605, "收式", 23, "#2f3b35").setInteractive({ useHandCursor: true });
     const modal = this.add.container(0, 0).setDepth(80).setVisible(false);
     this.layer.add(modal);
 
@@ -1609,7 +1626,7 @@ export class OpeningScene extends Phaser.Scene {
       this.activeGameplayPause = undefined;
       this.activeGameplayResume = undefined;
     };
-    const showResult = (rewardMode: "normal" | "minimum" | "proportional" = "normal") => {
+    const showResult = (rewardMode: "normal" | "minimum" | "proportional" | "current" = "normal") => {
       if (finalized) return;
       finalized = true;
       cleanup();
@@ -1617,6 +1634,8 @@ export class OpeningScene extends Phaser.Scene {
       const now = performance.now();
       const baseReward = rewardMode === "minimum"
         ? BAMBOO_GAME_CONFIG.rewardFormula.baseCultivation
+        : rewardMode === "current"
+          ? controller.currentCultivationReward()
         : rewardMode === "proportional"
           ? controller.earlyCultivationReward(now)
           : controller.cultivationReward();
@@ -1625,16 +1644,89 @@ export class OpeningScene extends Phaser.Scene {
       this.player.cultivation = Math.min(cap, this.player.cultivation + reward);
       this.recordActivity("砍竹", reward);
       this.saveGame();
-      this.showBambooTaskResult(controller, reward, proficiency, baseReward);
+      this.showBambooTaskResult(controller, reward, proficiency, rewardMode === "current");
+    };
+    const hud = new CultivationGameHUD(this, this.layer, {
+      title: "砍竹修行",
+      durationSeconds: 30,
+      progressCurrent: 0,
+      progressGoal: BAMBOO_GAME_CONFIG.goalCount,
+      info: `砍竹\n修為 +30\n────────\n今日剩餘次數 ${Math.max(0, 3 - this.player.timeSlot)}/3`,
+      hint: "凝神調息，在氣與刃合一之時落斧。",
+      identity: this.player.realm === "uninitiated"
+        ? this.player.identity
+        : `${this.player.identity}\n${this.player.realm === "qi" ? `練氣${this.player.level}層` : `筑基${this.player.level}層`}`,
+      cultivation: `修為值　${this.player.cultivation}/${this.cultivationTarget()}`,
+      onReturnPause: () => {
+        if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(true);
+        else controller.pause(performance.now());
+      },
+      onReturnResume: () => {
+        if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(false);
+        else controller.resume(performance.now());
+      },
+      onReturn: () => {
+        controller.finishEarly();
+        showResult("current");
+      },
+      onPause: () => this.toggleSystemMenu(),
+    });
+    const guideMessage = this.add.container(0, 0).setDepth(68).setVisible(false).setAlpha(0);
+    if (showFirstBambooGuide) {
+      const guidePanel = this.add.image(145, 280, "cultivation-hud-npc-info").setDisplaySize(230, 260);
+      const guidePortrait = this.add.image(95, 274, bambooGuideTexture).setOrigin(0.5);
+      guidePortrait.setScale(Math.min(105 / guidePortrait.width, 160 / guidePortrait.height));
+      if (bambooGuideId === "liu-ruyan") guidePortrait.setFlipX(true);
+      const guideName = this.add.text(155, 245, bambooGuideName, {
+        fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+        fontSize: "17px",
+        color: "#334039",
+      }).setOrigin(0, 0.5);
+      const guideLine = this.add.text(155, 286, "作得不錯。", {
+        fontFamily: '"Noto Serif TC", "Microsoft JhengHei", serif',
+        fontSize: "17px",
+        color: "#26322e",
+        wordWrap: { width: 90 },
+      }).setOrigin(0, 0.5);
+      guideMessage.add([guidePanel, guidePortrait, guideName, guideLine]);
+      this.layer.add(guideMessage);
+    }
+    let guidePraiseTriggered = false;
+    const showGuidePraise = () => {
+      if (!showFirstBambooGuide || guidePraiseTriggered || controller.stats.combo < 5) return;
+      guidePraiseTriggered = true;
+      this.player.bambooGuidePraiseSeen = true;
+      this.saveGame();
+      guideMessage.setVisible(true);
+      this.tweens.add({
+        targets: guideMessage,
+        alpha: 1,
+        y: { from: 8, to: 0 },
+        duration: 360,
+        ease: "Sine.out",
+      });
+      this.time.delayedCall(2200, () => {
+        if (!guideMessage.active) return;
+        this.tweens.add({
+          targets: guideMessage,
+          alpha: 0,
+          duration: 420,
+          onComplete: () => guideMessage.setVisible(false),
+        });
+      });
     };
     const closeModal = () => {
       modal.removeAll(true);
       modal.setVisible(false);
     };
     const openModal = (kind: "pause" | "quit" | "finish") => {
-      if (finalized || controller.state === "ready") return;
+      if (finalized) return;
+      if ((controller.state === "ready" || controller.state === "countdown") && kind !== "pause") return;
       modalKind = kind;
-      if (kind === "pause") controller.pause(performance.now());
+      if (kind === "pause") {
+        if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(true);
+        else controller.pause(performance.now());
+      }
       else controller.openQuitConfirm(performance.now());
       modal.removeAll(true).setVisible(true);
       const dim = this.add.rectangle(600, 337.5, 1200, 675, 0x101816, 0.64).setInteractive();
@@ -1655,7 +1747,8 @@ export class OpeningScene extends Phaser.Scene {
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
       primary.on("pointerup", () => {
         if (modalKind === "pause") {
-          controller.resume(performance.now());
+          if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(false);
+          else controller.resume(performance.now());
           closeModal();
         } else if (modalKind === "quit") {
           controller.finishEarly();
@@ -1677,11 +1770,14 @@ export class OpeningScene extends Phaser.Scene {
       modal.add([dim, paper, title, primary, secondary]);
     };
 
-    this.activeGameplayPause = () => controller.pause(performance.now());
-    this.activeGameplayResume = () => controller.resume(performance.now());
-    this.selectionCornerControl("back", () => openModal("quit"));
-    this.selectionCornerControl("settings", undefined, () => this.toggleSystemMenu());
-
+    this.activeGameplayPause = () => {
+      if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(true);
+      else controller.pause(performance.now());
+    };
+    this.activeGameplayResume = () => {
+      if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(false);
+      else controller.resume(performance.now());
+    };
     let chopSequenceId = 0;
     const playChopAnimation = () => {
       chopSequenceId += 1;
@@ -1723,24 +1819,25 @@ export class OpeningScene extends Phaser.Scene {
         });
         if (judgement === "PERFECT") this.cameras.main.shake(90, 0.0018);
       }
-      const comboActive = controller.stats.combo > 0;
-      comboInk.setAlpha(comboActive ? 0.94 : 0);
-      comboTitle.setAlpha(comboActive ? 1 : 0);
-      comboCounter.setCombo(controller.stats.combo);
-      const completed = Math.min(controller.stats.strikes, BAMBOO_GAME_CONFIG.goalCount);
-      const excess = Math.max(0, controller.stats.strikes - BAMBOO_GAME_CONFIG.goalCount);
-      progressLabel.setText(
-        `修為 +30\n竹子數量：${completed}/${BAMBOO_GAME_CONFIG.goalCount}${excess > 0 ? `\n超額完成：${excess}` : ""}\n今日剩餘修行次數：${Math.max(0, 2 - this.player.timeSlot)}`,
-      );
+      streakCounter.setState({
+        label: "連擊",
+        value: controller.stats.combo,
+        tier: this.streakTier(controller.stats.combo),
+        visible: controller.stats.combo > 0,
+      });
+      showGuidePraise();
+      const completed = controller.stats.strikes;
+      hud.setProgress(completed, BAMBOO_GAME_CONFIG.goalCount);
+      hud.setInfo(`砍竹\n修為 +30\n今日剩餘 ${Math.max(0, 2 - this.player.timeSlot)} / 3 次修行`);
     };
     const handleInput = () => {
+      if (controller.state !== "playing") return;
       playChopAnimation();
       const judgement = controller.input(performance.now());
       if (judgement) displayJudgement(judgement);
     };
     inputZone.on("pointerdown", handleInput);
     this.input.keyboard?.on("keydown-SPACE", handleInput);
-    finishEarly.on("pointerup", () => openModal("finish"));
 
     const update = () => {
       if (finalized) return;
@@ -1753,102 +1850,58 @@ export class OpeningScene extends Phaser.Scene {
       if (event) displayJudgement(event);
       const snapshot = controller.snapshot(now);
       chargeGauge.update(snapshot.cycleProgress, now, snapshot.state === "paused");
-      comboCounter.setPaused(snapshot.state === "paused");
+      streakCounter.setPaused(snapshot.state === "paused");
       if (snapshot.state !== "playing") return;
       const remaining = Math.ceil(snapshot.remainingMs / 1000);
-      timeLabel.setText(`時間 ${remaining}`);
-      const timeRatio = snapshot.remainingMs / BAMBOO_GAME_CONFIG.roundDurationMs;
-      timeBar.clear()
-        .fillStyle(0x111a18, 0.78).fillRoundedRect(400, 44, 400, 44, 14)
-        .fillStyle(0x426f58, 0.96).fillRoundedRect(405, 49, 390 * Math.max(0, timeRatio), 34, 10);
-      ringLayer.clear();
+      hud.setTime(remaining);
     };
     this.events.on(Phaser.Scenes.Events.UPDATE, update);
 
-    let count = BAMBOO_GAME_CONFIG.countdownSeconds;
-    const countdownEvent = this.time.addEvent({
-      delay: 1000,
-      repeat: BAMBOO_GAME_CONFIG.countdownSeconds - 1,
-      callback: () => {
-        count -= 1;
-        if (count > 0) {
-          timeLabel.setText(String(count)).setScale(1.15);
-          this.tweens.add({ targets: timeLabel, scale: 1, duration: 240 });
-        } else {
-          timeLabel.setText("開始").setScale(1.12);
-          this.tweens.add({ targets: timeLabel, scale: 1, duration: 320 });
-          controller.begin(performance.now());
-          this.tweens.add({
-            targets: countdownBacking,
-            alpha: 0,
-            duration: 300,
-            onComplete: () => countdownBacking.destroy(),
-          });
-          this.time.delayedCall(360, () => timeLabel.active && timeLabel.setText("時間 30"));
-        }
+    countdown = new CultivationCountdownOverlay(this, this.layer, {
+      steps: [
+        { label: "凝神", number: 3 },
+        { label: "聚力", number: 2 },
+        { label: "開始", number: 1 },
+      ],
+      onComplete: () => {
+        controller.begin(performance.now());
       },
     });
-    countdownEvent.paused = false;
+    controller.startCountdown();
+    countdown.start();
   }
 
   private showBambooTaskResult(
     controller: BambooGameController,
     reward: number,
     proficiency: number,
-    baseReward: number,
+    endedEarly = false,
   ) {
     this.resetLandscape();
     const background = this.add.image(600, 337.5, "bamboo-minigame-bg").setDisplaySize(1200, 675).setAlpha(0.58);
     const shade = this.add.rectangle(600, 337.5, 1200, 675, 0x070c0b, 0.64);
-    const resultBacking = this.add.image(600, 342, "shared-result-panel").setDisplaySize(820, 510);
-    this.layer.add([background, shade, resultBacking]);
-    const title = this.text(600, 146, "修行完成", 42, "#30342f");
-    const rowData: Array<[string, string, number, string]> = [
-      ["人刃合一", String(controller.stats.perfect), 214, "#9a752b"],
-      ["運勁得宜", String(controller.stats.good), 248, "#333b37"],
-      ["勉強斬中", String(controller.stats.normal), 281, "#333b37"],
-      ["氣息紊亂", String(controller.stats.miss), 314, "#4d514d"],
-      ["總砍竹次數", String(controller.stats.strikes), 348, "#333b37"],
-      ["最高連擊", String(controller.stats.maxCombo), 380, "#9a752b"],
-      ["獲得基本修為", `${reward}（${proficiency}% 熟練）`, 414, "#9a752b"],
-      ["額外修為", String(Math.max(0, reward - Math.round(baseReward * (1 + proficiency / 100)))), 447, "#333b37"],
-    ];
-    const rows: Phaser.GameObjects.Text[][] = [[title]];
-    rowData.forEach(([label, value, y, color]) => {
-      const labelText = this.text(355, y, label, 23, color).setOrigin(0, 0.5);
-      const valueText = this.text(665, y, value, 23, color).setOrigin(0, 0.5);
-      rows.push([labelText, valueText]);
-    });
-    rows.forEach((row, index) => {
-      const targetY = row[0].y;
-      row.forEach((item) => item.setAlpha(0).setY(targetY + 12));
-      this.tweens.add({
-        targets: row,
-        alpha: 1,
-        y: targetY,
-        duration: 420,
-        delay: 180 + index * 210,
-        ease: "Sine.out",
-      });
-    });
-    const resultButton = (x: number, label: string, action: () => void, tone: "paper" | "ink") => {
-      const backing = this.add.image(x, 527, tone === "paper" ? "s01-gold-button-frame" : "s01-selection-confirm")
-        .setDisplaySize(220, 58);
-      const normalColor = tone === "paper" ? "#303832" : "#eadfc7";
-      const caption = this.text(x, 527, label, 22, normalColor);
-      const hit = this.add.zone(x, 527, 220, 58).setInteractive({ useHandCursor: true });
-      hit.on("pointerover", () => { backing.setAlpha(0.88); caption.setColor("#b88b3f"); });
-      hit.on("pointerout", () => { backing.setAlpha(1); caption.setColor(normalColor); });
-      hit.on("pointerup", action);
-      this.layer.addAt(backing, Math.max(0, this.layer.getIndex(caption) - 1));
-      this.layer.add(hit);
-      backing.setAlpha(0);
-      caption.setAlpha(0);
-      this.tweens.add({ targets: [backing, caption], alpha: 1, duration: 260, ease: "Sine.out" });
-    };
-    this.time.delayedCall(2050, () => {
-      resultButton(470, "再次修行", () => this.playBambooTask(), "paper");
-      resultButton(730, "離開", () => this.showMainMenu(), "ink");
+    this.layer.add([background, shade]);
+    new CultivationResultPanel(this, this.layer, {
+      title: endedEarly ? "提前結束" : "修行完成",
+      rows: [
+        { label: "人刃合一", value: controller.stats.perfect, accent: true },
+        { label: "運勁得宜", value: controller.stats.good },
+        { label: "勉強斬中", value: controller.stats.normal },
+        { label: "氣息紊亂", value: controller.stats.miss },
+        { label: "最高連擊", value: controller.stats.maxCombo, accent: true },
+        {
+          label: "超額完成",
+          value: `+${Math.max(0, controller.stats.perfect + controller.stats.good + controller.stats.normal - BAMBOO_GAME_CONFIG.goalCount)} 修為`,
+          accent: true,
+        },
+        { label: "砍竹熟練度", value: `+${proficiency}%` },
+      ],
+      cultivation: reward,
+      primaryLabel: "再次修行",
+      secondaryLabel: "離開",
+      primaryDisabled: this.player.cultivation >= this.cultivationTarget(),
+      onPrimary: () => this.playBambooTask(),
+      onSecondary: () => this.showActivities(),
     });
   }
 
@@ -1885,6 +1938,7 @@ export class OpeningScene extends Phaser.Scene {
     this.layer.add([character, pole, leftRope, rightRope, leftBucket, rightBucket]);
 
     const controller = new WaterCarryGameController();
+    let countdown: CultivationCountdownOverlay;
     const timeLabel = this.text(600, 38, "時間 25", 24, "#f1ead7");
     const balanceLabel = this.text(975, 40, "平衡 100%", 23, "#f1ead7");
     const infoLabel = this.text(168, 282, "挑水\n每日任務：挑水修行\n\n修為 +10\n今日剩餘 3 次修行", 20, "#2d352f");
@@ -1892,7 +1946,6 @@ export class OpeningScene extends Phaser.Scene {
     const feedback = this.text(600, 520, "", 25, "#e9cb78").setAlpha(0);
     const guide = this.text(600, 625, "保持重心在中央，避免水灑出！\n使用 ← → 鍵調整平衡", 20, "#f4ead2");
     guide.setAlign("center").setLineSpacing(5);
-    const countdown = this.text(600, 315, "3", 82, "#f4e8ca");
     const back = this.text(70, 48, "←\n返回", 19, "#f1e5cc").setInteractive({ useHandCursor: true });
     const pause = this.text(1085, 50, "暫停", 19, "#f1e5cc").setInteractive({ useHandCursor: true });
     const leftTouch = this.add.zone(190, 555, 280, 190).setInteractive({ useHandCursor: true });
@@ -1919,6 +1972,8 @@ export class OpeningScene extends Phaser.Scene {
       this.events.off(Phaser.Scenes.Events.UPDATE, update);
       this.input.off("pointerup", releaseTouch);
       Object.values(keys ?? {}).forEach((key) => key.destroy());
+      this.activeGameplayPause = undefined;
+      this.activeGameplayResume = undefined;
     };
     const showFeedback = (message: string) => {
       feedback.setText(message).setAlpha(1).setY(520);
@@ -1935,20 +1990,73 @@ export class OpeningScene extends Phaser.Scene {
       if (finalized) return;
       finalized = true;
       cleanup();
-      const { reward } = this.applyGameProficiency("挑水", WATER_CARRY_CONFIG.rewardCultivation);
+      const { reward, proficiency } = this.applyGameProficiency("挑水", WATER_CARRY_CONFIG.rewardCultivation);
       const cap = this.player.realm === "qi" ? REALMS.qi.cultivation[8] : this.cultivationTarget();
       this.player.cultivation = Math.min(cap, this.player.cultivation + reward);
       this.recordActivity("挑水", reward);
       this.saveGame();
-      this.showWaterCarryResult(controller, reward);
+      this.showWaterCarryResult(controller, reward, proficiency, false);
+    };
+    const settleEarly = () => {
+      if (finalized) return;
+      finalized = true;
+      const now = performance.now();
+      const ratio = controller.phase === "playing" || controller.phase === "paused"
+        ? Phaser.Math.Clamp(1 - controller.remainingMs(now) / (WATER_CARRY_CONFIG.durationSeconds * 1000), 0, 1)
+        : 0;
+      cleanup();
+      const baseReward = Math.round(WATER_CARRY_CONFIG.rewardCultivation * ratio);
+      const { reward, proficiency } = this.applyGameProficiency("挑水", baseReward);
+      const cap = this.player.realm === "qi" ? REALMS.qi.cultivation[8] : this.cultivationTarget();
+      this.player.cultivation = Math.min(cap, this.player.cultivation + reward);
+      this.recordActivity("挑水", reward);
+      this.saveGame();
+      this.showWaterCarryResult(controller, reward, proficiency, true);
+    };
+    const hud = new CultivationGameHUD(this, this.layer, {
+      title: "挑水修行",
+      durationSeconds: 25,
+      info: `挑水\n修為 +10\n────────\n今日剩餘次數 ${Math.max(0, 3 - this.player.timeSlot)}/3`,
+      hint: "按 A D 或 ← → 保持平衡，避免水灑出",
+      rightLabel: "平衡",
+      rightValue: "100",
+      identity: this.player.realm === "uninitiated"
+        ? this.player.identity
+        : `${this.player.identity}\n${this.player.realm === "qi" ? `練氣${this.player.level}層` : `筑基${this.player.level}層`}`,
+      cultivation: `修為值　${this.player.cultivation}/${this.cultivationTarget()}`,
+      onReturnPause: () => {
+        if (controller.phase === "ready" || controller.phase === "countdown") countdown.setPaused(true);
+        else controller.pause(performance.now());
+      },
+      onReturnResume: () => {
+        if (controller.phase === "ready" || controller.phase === "countdown") countdown.setPaused(false);
+        else controller.resume(performance.now());
+      },
+      onReturn: settleEarly,
+      onPause: () => this.toggleSystemMenu(),
+    });
+    [hudPaper, timeLabel, balanceLabel, infoLabel, guide, back, pause, leftTouchLabel, rightTouchLabel]
+      .forEach((item) => item.setVisible(false));
+    this.activeGameplayPause = () => {
+      if (controller.phase === "ready" || controller.phase === "countdown") countdown.setPaused(true);
+      else controller.pause(performance.now());
+    };
+    this.activeGameplayResume = () => {
+      if (controller.phase === "ready" || controller.phase === "countdown") countdown.setPaused(false);
+      else controller.resume(performance.now());
+      lastFrameAt = performance.now();
     };
     const closeModal = () => {
       modal.removeAll(true);
       modal.setVisible(false);
     };
     const openModal = (kind: "pause" | "quit") => {
-      if (finalized || controller.phase === "ready") return;
-      if (kind === "pause") controller.pause(performance.now());
+      if (finalized) return;
+      if ((controller.phase === "ready" || controller.phase === "countdown") && kind !== "pause") return;
+      if (kind === "pause") {
+        if (controller.phase === "ready" || controller.phase === "countdown") countdown.setPaused(true);
+        else controller.pause(performance.now());
+      }
       else controller.openQuitConfirm(performance.now());
       modal.removeAll(true).setVisible(true);
       const dim = this.add.rectangle(600, 337.5, 1200, 675, 0x101816, 0.64).setInteractive();
@@ -1966,7 +2074,8 @@ export class OpeningScene extends Phaser.Scene {
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
       primary.on("pointerup", () => {
         if (kind === "pause") {
-          controller.resume(performance.now());
+          if (controller.phase === "ready" || controller.phase === "countdown") countdown.setPaused(false);
+          else controller.resume(performance.now());
           lastFrameAt = performance.now();
           closeModal();
         } else {
@@ -2034,6 +2143,8 @@ export class OpeningScene extends Phaser.Scene {
       const remaining = Math.ceil(controller.remainingMs(now) / 1000);
       timeLabel.setText(`時間 ${remaining}`);
       balanceLabel.setText(`平衡 ${Math.round(result.stabilityScore)}%`);
+      hud.setTime(remaining);
+      hud.setRightMetric("平衡", Math.round(result.stabilityScore));
       const ratio = controller.remainingMs(now) / (WATER_CARRY_CONFIG.durationSeconds * 1000);
       timeBar.clear()
         .fillStyle(0x17231f, 0.64).fillRoundedRect(430, 62, 340, 13, 6)
@@ -2064,45 +2175,50 @@ export class OpeningScene extends Phaser.Scene {
     };
     this.events.on(Phaser.Scenes.Events.UPDATE, update);
 
-    let count = WATER_CARRY_CONFIG.countdownSeconds;
-    this.time.addEvent({
-      delay: 1000,
-      repeat: WATER_CARRY_CONFIG.countdownSeconds - 1,
-      callback: () => {
-        count -= 1;
-        if (count > 0) {
-          countdown.setText(String(count)).setScale(1.15);
-          this.tweens.add({ targets: countdown, scale: 1, duration: 240 });
-        } else {
-          countdown.setText("開始");
-          this.tweens.add({ targets: countdown, alpha: 0, duration: 420, onComplete: () => countdown.destroy() });
-          controller.begin(performance.now());
-          lastFrameAt = performance.now();
-          this.tweens.add({ targets: guide, alpha: 0, delay: 3000, duration: 600 });
-        }
+    countdown = new CultivationCountdownOverlay(this, this.layer, {
+      steps: [
+        { label: "穩心", number: 3 },
+        { label: "提擔", number: 2 },
+        { label: "開始", number: 1 },
+      ],
+      onComplete: () => {
+        controller.begin(performance.now());
+        lastFrameAt = performance.now();
+        this.tweens.add({ targets: guide, alpha: 0, delay: 3000, duration: 600 });
       },
     });
+    controller.startCountdown();
+    countdown.start();
   }
 
-  private showWaterCarryResult(controller: WaterCarryGameController, reward: number) {
+  private showWaterCarryResult(
+    controller: WaterCarryGameController,
+    reward: number,
+    proficiency: number,
+    endedEarly = false,
+  ) {
     this.resetLandscape();
     const background = this.add.image(600, 337.5, "bamboo-minigame-bg").setDisplaySize(1200, 675).setAlpha(0.55);
     const shade = this.add.rectangle(600, 337.5, 1200, 675, 0x14211e, 0.4);
     this.layer.add([background, shade]);
     const result = controller.result();
-    this.text(600, 70, "挑水修行完成", 40, "#f2e7cf");
-    this.text(600, 155, result.evaluation, 27, "#e9cb78");
-    this.text(480, 230, "平均平衡", 21, "#eee4d0");
-    this.text(720, 230, `${Math.round(result.stabilityScore)}%`, 22, "#eee4d0");
-    this.text(480, 275, "保持穩定", 21, "#eee4d0");
-    this.text(720, 275, `${result.stableTime.toFixed(1)} 秒`, 22, "#eee4d0");
-    this.text(480, 320, "失衡次數", 21, "#eee4d0");
-    this.text(720, 320, `${result.lossEvents}`, 22, "#eee4d0");
-    this.text(480, 365, "剩餘水量", 21, "#eee4d0");
-    this.text(720, 365, `${result.remainingWaterPercent}%`, 22, "#eee4d0");
-    this.text(600, 430, `獲得修為  +${reward}`, 28, "#e9cb78");
-    this.button(465, 545, "再次修行", () => this.playWaterTask(), 220);
-    this.button(735, 545, "返回", () => this.showActivities(), 220);
+    new CultivationResultPanel(this, this.layer, {
+      title: endedEarly ? "提前結束" : "修行完成",
+      rows: [
+        { label: "評價", value: result.evaluation, accent: true },
+        { label: "平均平衡", value: Math.round(result.stabilityScore) },
+        { label: "保持穩定", value: `${result.stableTime.toFixed(1)} 秒` },
+        { label: "失衡次數", value: result.lossEvents },
+        { label: "剩餘水量", value: `${result.remainingWaterPercent}%` },
+        { label: "挑水熟練度", value: `+${proficiency}%` },
+      ],
+      cultivation: reward,
+      primaryLabel: "再次修行",
+      secondaryLabel: "離開",
+      primaryDisabled: this.player.cultivation >= this.cultivationTarget(),
+      onPrimary: () => this.playWaterTask(),
+      onSecondary: () => this.showActivities(),
+    });
   }
 
   private playHerbTask() {
@@ -2174,6 +2290,12 @@ export class OpeningScene extends Phaser.Scene {
     } });
   }
 
+  private streakTier(value: number): StreakTier {
+    if (value >= 20) return "high";
+    if (value >= 10) return "medium";
+    return "normal";
+  }
+
   private playMantraTask() {
     this.resetLandscape();
     const background = this.add.image(600, 337.5, "heart-manual-bg").setDisplaySize(1200, 675);
@@ -2187,13 +2309,12 @@ export class OpeningScene extends Phaser.Scene {
     this.layer.add([background, hudShade, qiLayer, effectLayer, timeBar, hudPaper]);
 
     const controller = new HeartManualGameController();
-    const meridianX = 476;
-    const meridianPoints = [529, 446, 375, 312, 257].map((y, index) => ({
-      x: meridianX,
-      y,
-      name: HEART_MANUAL_CONFIG.meridians[index],
-    }));
-    let targetIndex = 0;
+    let countdown: CultivationCountdownOverlay;
+    const meridianPoints = HEART_MANUAL_CONFIG.meridianPath.map((point) => ({ ...point }));
+    const meridianX = meridianPoints[0].x;
+    let fromIndex = 0;
+    let targetIndex = 1;
+    let direction: 1 | -1 = 1;
     let finalized = false;
     let modalKind: "pause" | "quit" | "finish" = "pause";
 
@@ -2201,13 +2322,13 @@ export class OpeningScene extends Phaser.Scene {
     this.layer.add(inputZone);
     const timeLabel = this.text(600, 38, "時間 25", 24, "#f1ead7");
     const cultivationLabel = this.text(985, 38, "修為 +10", 21, "#f1ead7");
-    const resonanceLabel = this.text(1040, 128, "連續共鳴 0", 28, "#e8d08b");
+    const streakCounter = new StreakCounter(this, this.layer, 1050, 195);
+    streakCounter.setState({ label: "共鳴", value: 0, tier: "normal", visible: false });
     const infoLabel = this.text(160, 310, "參悟心法\n修為 +10\n今日尚餘 3 次修行", 21, "#2d352f");
     infoLabel.setLineSpacing(13);
     const guide = this.text(600, 615, "靈氣即將抵達【氣海】\n請把握時機點擊", 20, "#f4ead2");
     guide.setAlign("center").setLineSpacing(6);
     const judgementLabel = this.text(meridianX + 115, 365, "", 30, "#e9ca74").setAlpha(0);
-    const countdown = this.text(600, 315, "3", 82, "#f4e8ca");
     const back = this.text(70, 48, "←\n返回", 19, "#f1e5cc").setInteractive({ useHandCursor: true });
     const pause = this.text(1085, 50, "暫停", 19, "#f1e5cc").setInteractive({ useHandCursor: true });
     const finishEarly = this.text(1070, 605, "收式", 23, "#f1e5cc").setInteractive({ useHandCursor: true });
@@ -2224,8 +2345,10 @@ export class OpeningScene extends Phaser.Scene {
     const cleanup = () => {
       this.events.off(Phaser.Scenes.Events.UPDATE, update);
       this.input.keyboard?.off("keydown-SPACE", handleInput);
+      this.activeGameplayPause = undefined;
+      this.activeGameplayResume = undefined;
     };
-    const showResult = (rewardMode: "normal" | "minimum" | "proportional" = "normal") => {
+    const showResult = (rewardMode: "normal" | "minimum" | "proportional" | "current" = "normal") => {
       if (finalized) return;
       finalized = true;
       cleanup();
@@ -2233,24 +2356,63 @@ export class OpeningScene extends Phaser.Scene {
       const now = performance.now();
       const baseReward = rewardMode === "minimum"
         ? HEART_MANUAL_CONFIG.rewardFormula.baseCultivation
+        : rewardMode === "current"
+          ? controller.currentCultivationReward()
         : rewardMode === "proportional"
           ? controller.earlyCultivationReward(now)
           : controller.cultivationReward();
-      const { reward } = this.applyGameProficiency("參悟心法", baseReward);
+      const { reward, proficiency } = this.applyGameProficiency("參悟心法", baseReward);
       const cap = this.player.realm === "qi" ? REALMS.qi.cultivation[8] : this.cultivationTarget();
       this.player.cultivation = Math.min(cap, this.player.cultivation + reward);
       this.recordActivity("參悟心法", reward);
       this.saveGame();
-      this.showHeartManualResult(controller, reward);
+      this.showHeartManualResult(controller, reward, proficiency, rewardMode === "current");
+    };
+    const hud = new CultivationGameHUD(this, this.layer, {
+      title: "參悟心法",
+      durationSeconds: 25,
+      info: `參悟心法\n修為 +10\n────────\n今日剩餘次數 ${Math.max(0, 3 - this.player.timeSlot)}/3`,
+      hint: "靈氣即將抵達【神庭】　請把握時機點擊",
+      identity: this.player.realm === "uninitiated"
+        ? this.player.identity
+        : `${this.player.identity}\n${this.player.realm === "qi" ? `練氣${this.player.level}層` : `筑基${this.player.level}層`}`,
+      cultivation: `修為值　${this.player.cultivation}/${this.cultivationTarget()}`,
+      onReturnPause: () => {
+        if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(true);
+        else controller.pause(performance.now());
+      },
+      onReturnResume: () => {
+        if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(false);
+        else controller.resume(performance.now());
+      },
+      onReturn: () => {
+        controller.finishEarly();
+        showResult("current");
+      },
+      onPause: () => this.toggleSystemMenu(),
+    });
+    [hudPaper, timeLabel, cultivationLabel, infoLabel, guide, back, pause, finishEarly]
+      .forEach((item) => item.setVisible(false));
+    this.activeGameplayPause = () => {
+      if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(true);
+      else controller.pause(performance.now());
+    };
+    this.activeGameplayResume = () => {
+      if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(false);
+      else controller.resume(performance.now());
     };
     const closeModal = () => {
       modal.removeAll(true);
       modal.setVisible(false);
     };
     const openModal = (kind: "pause" | "quit" | "finish") => {
-      if (finalized || controller.state === "ready") return;
+      if (finalized) return;
+      if ((controller.state === "ready" || controller.state === "countdown") && kind !== "pause") return;
       modalKind = kind;
-      if (kind === "pause") controller.pause(performance.now());
+      if (kind === "pause") {
+        if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(true);
+        else controller.pause(performance.now());
+      }
       else controller.openQuitConfirm(performance.now());
       modal.removeAll(true).setVisible(true);
       const dim = this.add.rectangle(600, 337.5, 1200, 675, 0x101816, 0.64).setInteractive();
@@ -2271,7 +2433,8 @@ export class OpeningScene extends Phaser.Scene {
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
       primary.on("pointerup", () => {
         if (modalKind === "pause") {
-          controller.resume(performance.now());
+          if (controller.state === "ready" || controller.state === "countdown") countdown.setPaused(false);
+          else controller.resume(performance.now());
           closeModal();
         } else if (modalKind === "quit") {
           controller.finishEarly();
@@ -2304,14 +2467,20 @@ export class OpeningScene extends Phaser.Scene {
           .lineStyle(2, 0xe9c872, 0.35).strokeCircle(point.x, point.y, 31);
         this.time.delayedCall(190, () => effectLayer.clear());
       }
-      if (controller.stats.combo > 0) {
-        this.tweens.add({ targets: resonanceLabel, scale: 1.14, duration: 90, yoyo: true });
-      }
-      targetIndex = (targetIndex + 1) % meridianPoints.length;
-      resonanceLabel.setText(`連續共鳴 ${controller.stats.combo}`);
+      streakCounter.setState({
+        label: "共鳴",
+        value: controller.stats.combo,
+        tier: this.streakTier(controller.stats.combo),
+        visible: controller.stats.combo > 0,
+      });
+      fromIndex = targetIndex;
+      if (targetIndex === meridianPoints.length - 1) direction = -1;
+      else if (targetIndex === 0) direction = 1;
+      targetIndex += direction;
       cultivationLabel.setText(`修為 +${controller.cultivationReward()}`);
       infoLabel.setText(`參悟心法\n修為 +${controller.cultivationReward()}\n今日尚餘 3 次修行`);
       guide.setText(`靈氣即將抵達【${meridianPoints[targetIndex].name}】\n請把握時機點擊`);
+      hud.setHint(`靈氣即將抵達【${meridianPoints[targetIndex].name}】　請把握時機點擊`);
     };
     const handleInput = () => {
       const judgement = controller.input(performance.now());
@@ -2333,15 +2502,17 @@ export class OpeningScene extends Phaser.Scene {
       }
       if (event) displayJudgement(event);
       const snapshot = controller.snapshot(now);
+      streakCounter.setPaused(snapshot.state === "paused");
       if (snapshot.state !== "playing") return;
       const remaining = Math.ceil(snapshot.remainingMs / 1000);
       timeLabel.setText(`時間 ${remaining}`);
+      hud.setTime(remaining);
       const ratio = snapshot.remainingMs / HEART_MANUAL_CONFIG.roundDurationMs;
       timeBar.clear()
         .fillStyle(0x17231f, 0.64).fillRoundedRect(430, 62, 340, 13, 6)
         .fillStyle(0x426f58, 0.96).fillRoundedRect(433, 65, 334 * Math.max(0, ratio), 7, 3);
       const to = meridianPoints[targetIndex];
-      const from = meridianPoints[(targetIndex + meridianPoints.length - 1) % meridianPoints.length];
+      const from = meridianPoints[fromIndex];
       const progress = Phaser.Math.Easing.Sine.InOut(snapshot.cycleProgress);
       const qx = Phaser.Math.Linear(from.x, to.x, progress);
       const qy = Phaser.Math.Linear(from.y, to.y, progress);
@@ -2351,38 +2522,45 @@ export class OpeningScene extends Phaser.Scene {
     };
     this.events.on(Phaser.Scenes.Events.UPDATE, update);
 
-    let count = HEART_MANUAL_CONFIG.countdownSeconds;
-    this.time.addEvent({
-      delay: 1000,
-      repeat: HEART_MANUAL_CONFIG.countdownSeconds - 1,
-      callback: () => {
-        count -= 1;
-        if (count > 0) {
-          countdown.setText(String(count)).setScale(1.15);
-          this.tweens.add({ targets: countdown, scale: 1, duration: 240 });
-        } else {
-          countdown.setText("開始");
-          this.tweens.add({ targets: countdown, alpha: 0, duration: 420, onComplete: () => countdown.destroy() });
-          controller.begin(performance.now());
-        }
-      },
+    countdown = new CultivationCountdownOverlay(this, this.layer, {
+      steps: [
+        { label: "靜心", number: 3 },
+        { label: "入定", number: 2 },
+        { label: "開始", number: 1 },
+      ],
+      onComplete: () => controller.begin(performance.now()),
     });
+    controller.startCountdown();
+    countdown.start();
   }
 
-  private showHeartManualResult(controller: HeartManualGameController, reward: number) {
+  private showHeartManualResult(
+    controller: HeartManualGameController,
+    reward: number,
+    proficiency: number,
+    endedEarly = false,
+  ) {
     this.resetLandscape();
     const background = this.add.image(600, 337.5, "heart-manual-bg").setDisplaySize(1200, 675).setAlpha(0.52);
     const shade = this.add.rectangle(600, 337.5, 1200, 675, 0x14211e, 0.4);
     this.layer.add([background, shade]);
-    this.text(600, 70, "修行完成", 42, "#f2e7cf");
-    this.text(425, 180, `頓悟  ${controller.stats.perfect}`, 22, "#e9cb78");
-    this.text(425, 225, `明悟  ${controller.stats.good}`, 22, "#eee4d0");
-    this.text(425, 270, `參悟  ${controller.stats.normal}`, 22, "#eee4d0");
-    this.text(775, 180, `雜念  ${controller.stats.miss}`, 22, "#d8cec0");
-    this.text(775, 225, `最高共鳴  ${controller.stats.maxCombo}`, 22, "#e9cb78");
-    this.text(600, 350, `修為  +${reward}`, 29, "#e9cb78");
-    this.button(465, 535, "再次修行", () => this.playMantraTask(), 220);
-    this.button(735, 535, "返回", () => this.showActivities(), 220);
+    new CultivationResultPanel(this, this.layer, {
+      title: endedEarly ? "提前結束" : "修行完成",
+      rows: [
+        { label: "頓悟", value: controller.stats.perfect, accent: true },
+        { label: "明悟", value: controller.stats.good },
+        { label: "參悟", value: controller.stats.normal },
+        { label: "雜念", value: controller.stats.miss },
+        { label: "最高共鳴", value: controller.stats.maxCombo, accent: true },
+        { label: "參悟心法熟練度", value: `+${proficiency}%` },
+      ],
+      cultivation: reward,
+      primaryLabel: "再次修行",
+      secondaryLabel: "離開",
+      primaryDisabled: this.player.cultivation >= this.cultivationTarget(),
+      onPrimary: () => this.playMantraTask(),
+      onSecondary: () => this.showActivities(),
+    });
   }
 
   private showTaskResult(task: string, gain: number, score: number, success: boolean) {

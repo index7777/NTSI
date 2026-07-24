@@ -1,5 +1,16 @@
 version: 1
 assets:
+  - id: scene_water_carry_well_bright_003
+    category: scene
+    name: water_carry_well_bright
+    status: candidate
+    canvas: { width: 1680, height: 945, transparent: false }
+    runtime: { engine: phaser, native_viewport: 1200x675, target_scene: water_carry_minigame }
+    references:
+      gameplay_mockup: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png
+      candidate: art/candidates/scenes/water-carry-well-bright-landscape-v3.png
+    constraints: [background only, no player, no NPC, no HUD, no UI, no text, no effects, no watermark]
+    manual_checks: [center character safe area, top and bottom HUD safe areas, well remains right of character, 960x540 readability, 640x360 readability]
   - id: scene_title_sect_approach_morning_001
     category: scene
     name: title_sect_approach_morning

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "root": "assets",
-  "count": 66,
+  "count": 126,
   "assets": [
     {
       "path": "audio/music/daily-01.mp3",
@@ -29,6 +29,133 @@
       "mime": "audio/mpeg"
     },
     {
+      "path": "audio/sfx/bamboo/axe-hit-bamboo-v1.ogg",
+      "bytes": 6607,
+      "mime": "audio/ogg"
+    },
+    {
+      "path": "audio/sfx/bamboo/axe-hit-perfect-v1.ogg",
+      "bytes": 6181,
+      "mime": "audio/ogg"
+    },
+    {
+      "path": "audio/sfx/bamboo/axe-swing-v1.ogg",
+      "bytes": 5795,
+      "mime": "audio/ogg"
+    },
+    {
+      "path": "characters/bamboo-actions/player-female-axe-chop-frame-1-v1.png",
+      "bytes": 268804,
+      "mime": "image/png",
+      "width": 500,
+      "height": 793,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-female-axe-chop-frame-2-v1.png",
+      "bytes": 314795,
+      "mime": "image/png",
+      "width": 500,
+      "height": 793,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-female-axe-chop-frame-3-v1.png",
+      "bytes": 276722,
+      "mime": "image/png",
+      "width": 500,
+      "height": 793,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-female-axe-chop-frame-4-v1.png",
+      "bytes": 276722,
+      "mime": "image/png",
+      "width": 500,
+      "height": 793,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-female-axe-chop-frame-5-v1.png",
+      "bytes": 270525,
+      "mime": "image/png",
+      "width": 500,
+      "height": 793,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-female-axe-chop-v1.png",
+      "bytes": 1365885,
+      "mime": "image/png",
+      "width": 1059,
+      "height": 1486,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-male-axe-chop-frame-1-v1.png",
+      "bytes": 266345,
+      "mime": "image/png",
+      "width": 500,
+      "height": 717,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-male-axe-chop-frame-2-v1.png",
+      "bytes": 272511,
+      "mime": "image/png",
+      "width": 500,
+      "height": 717,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-male-axe-chop-frame-3-v1.png",
+      "bytes": 254425,
+      "mime": "image/png",
+      "width": 500,
+      "height": 717,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-male-axe-chop-frame-4-v1.png",
+      "bytes": 259003,
+      "mime": "image/png",
+      "width": 500,
+      "height": 717,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-male-axe-chop-frame-5-v1.png",
+      "bytes": 259514,
+      "mime": "image/png",
+      "width": 500,
+      "height": 717,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/bamboo-actions/player-male-axe-chop-v1.png",
+      "bytes": 1312053,
+      "mime": "image/png",
+      "width": 1131,
+      "height": 1391,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/liu-ruyan/bamboo-guide-v1.png",
+      "bytes": 1547363,
+      "mime": "image/png",
+      "width": 1402,
+      "height": 1122,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/mu-qingli/bamboo-guide-v1.png",
+      "bytes": 1375137,
+      "mime": "image/png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGBA"
+    },
+    {
       "path": "characters/outer-sect-steward-v1.png",
       "bytes": 2612875,
       "mime": "image/png",
@@ -53,12 +180,52 @@
       "mode": "RGBA"
     },
     {
+      "path": "characters/portraits/outer-sect-steward-closeup-1024-v2.png",
+      "bytes": 1503205,
+      "mime": "image/png",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/portraits/outer-sect-steward-closeup-v1.png",
+      "bytes": 1735566,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "characters/portraits/sect-elder-serious-1024-v1.png",
+      "bytes": 1183397,
+      "mime": "image/png",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGBA"
+    },
+    {
       "path": "characters/sect-elder-v1.png",
       "bytes": 1078798,
       "mime": "image/png",
       "width": 1024,
       "height": 1536,
       "mode": "RGBA"
+    },
+    {
+      "path": "cultivation/qi-entry/qi_entry_bg.png",
+      "bytes": 2667640,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/bamboo-minigame-morning-v1.png",
+      "bytes": 2953386,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
     },
     {
       "path": "scenes/character-selection-courtyard-morning-v1.png",
@@ -85,6 +252,22 @@
       "mode": "RGB"
     },
     {
+      "path": "scenes/chore-office-registration-chibi-v3.png",
+      "bytes": 2951133,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/chore-office-registration-queue-v2.png",
+      "bytes": 2797993,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
       "path": "scenes/chore-office-story-card-v1.png",
       "bytes": 2797993,
       "mime": "image/png",
@@ -98,6 +281,14 @@
       "mime": "image/png",
       "width": 941,
       "height": 1672,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/heart-manual-room-landscape-v1.png",
+      "bytes": 2232066,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
       "mode": "RGB"
     },
     {
@@ -123,6 +314,22 @@
       "width": 941,
       "height": 1672,
       "mode": "RGBA"
+    },
+    {
+      "path": "scenes/question-stone-registration-square-centered-v2.png",
+      "bytes": 3223376,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "path": "scenes/question-stone-registration-square-landscape-v1.png",
+      "bytes": 3332553,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
     },
     {
       "path": "scenes/sect-courtyard-v1.png",
@@ -173,6 +380,110 @@
       "mode": "RGBA"
     },
     {
+      "path": "ui/bamboo/combo-calligraphy-gold-v1.png",
+      "bytes": 1400885,
+      "mime": "image/png",
+      "width": 1438,
+      "height": 676,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/bamboo/combo-ink-backing-v1.png",
+      "bytes": 1275021,
+      "mime": "image/png",
+      "width": 1879,
+      "height": 524,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/bamboo/timing-empty-ring-v1.png",
+      "bytes": 1363711,
+      "mime": "image/png",
+      "width": 1092,
+      "height": 1081,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/cultivation-hud/bottom-hint-parchment-v1.png",
+      "bytes": 798450,
+      "mime": "image/png",
+      "width": 1536,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/cultivation-hud/information-parchment-v1.png",
+      "bytes": 1443512,
+      "mime": "image/png",
+      "width": 1024,
+      "height": 1280,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/cultivation-hud/minigame-npc-information-parchment-v1.png",
+      "bytes": 1551667,
+      "mime": "image/png",
+      "width": 1536,
+      "height": 768,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/cultivation-hud/pause-ink-v1.png",
+      "bytes": 398232,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/cultivation-hud/return-arrow-v1.png",
+      "bytes": 367127,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/cultivation-hud/right-metric-ink-v1.png",
+      "bytes": 1617151,
+      "mime": "image/png",
+      "width": 1086,
+      "height": 1448,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/cultivation-hud/time-hourglass-v1.png",
+      "bytes": 592536,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/cultivation-hud/top-hud-parchment-v1.png",
+      "bytes": 714632,
+      "mime": "image/png",
+      "width": 1536,
+      "height": 512,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/dialogue/xuan-dialogue-panel-v1.png",
+      "bytes": 1826052,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/heart-manual/resonance-calligraphy-gold-v1.png",
+      "bytes": 775214,
+      "mime": "image/png",
+      "width": 1774,
+      "height": 887,
+      "mode": "RGBA"
+    },
+    {
       "path": "ui/hud/backpack-ink-v1.png",
       "bytes": 153540,
       "mime": "image/png",
@@ -194,6 +505,94 @@
       "mime": "image/png",
       "width": 1024,
       "height": 1536,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/results/shared-result-panel-v1.png",
+      "bytes": 1838889,
+      "mime": "image/png",
+      "width": 1412,
+      "height": 839,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/s01/character-gender-choice-strip-v1.png",
+      "bytes": 1582581,
+      "mime": "image/png",
+      "width": 1907,
+      "height": 591,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/s01/character-selection-confirm-button-v1.png",
+      "bytes": 779139,
+      "mime": "image/png",
+      "width": 1881,
+      "height": 836,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/s01/character-selection-info-gold-frame-v1.png",
+      "bytes": 111878,
+      "mime": "image/png",
+      "width": 1253,
+      "height": 576,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/s01/generic-gold-button-frame-v1.png",
+      "bytes": 122424,
+      "mime": "image/png",
+      "width": 1677,
+      "height": 364,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/s01/name-entry-registry-gold-frame-v1.png",
+      "bytes": 199093,
+      "mime": "image/png",
+      "width": 2508,
+      "height": 2508,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/shared-controls/back-arrow-ivory-gold-v1.png",
+      "bytes": 226614,
+      "mime": "image/png",
+      "width": 372,
+      "height": 732,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/shared-controls/gold-double-circle-plain-v1.png",
+      "bytes": 1110655,
+      "mime": "image/png",
+      "width": 2508,
+      "height": 2508,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/shared-controls/settings-gear-arrow-style-center-cutout-v3.png",
+      "bytes": 1494590,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/shared-controls/settings-gear-arrow-style-v2.png",
+      "bytes": 1142312,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/shared-controls/settings-gear-gold-v1.png",
+      "bytes": 449029,
+      "mime": "image/png",
+      "width": 716,
+      "height": 724,
       "mode": "RGBA"
     },
     {
@@ -231,6 +630,46 @@
       "mime": "image/png",
       "width": 256,
       "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/approved-2026-07-23/achievement-object-icon-v1.png",
+      "bytes": 165885,
+      "mime": "image/png",
+      "width": 351,
+      "height": 342,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/approved-2026-07-23/cultivation-log-object-icon-v1.png",
+      "bytes": 159252,
+      "mime": "image/png",
+      "width": 351,
+      "height": 342,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/approved-2026-07-23/jiujie-wenxian-logo-v3.png",
+      "bytes": 2689400,
+      "mime": "image/png",
+      "width": 2624,
+      "height": 948,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/approved-2026-07-23/jiujie-wenxian-logo-v4.png",
+      "bytes": 8262711,
+      "mime": "image/png",
+      "width": 5828,
+      "height": 2244,
+      "mode": "RGBA"
+    },
+    {
+      "path": "ui/title/approved-2026-07-23/settings-object-icon-v1.png",
+      "bytes": 162207,
+      "mime": "image/png",
+      "width": 351,
+      "height": 342,
       "mode": "RGBA"
     },
     {
@@ -452,6 +891,14 @@
       "mode": "RGBA"
     },
     {
+      "path": "vfx/bamboo/bamboo-axe-impact-v1.png",
+      "bytes": 653341,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
       "path": "vfx/kenney-particle-pack/mist-01.png",
       "bytes": 97452,
       "mime": "image/png",
@@ -482,6 +929,30 @@
       "width": 512,
       "height": 512,
       "mode": "P"
+    },
+    {
+      "path": "vfx/question-stone/single-root-golden-burst-v1.png",
+      "bytes": 1901965,
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "path": "vfx/question-stone/single-root-golden-mist-v1.png",
+      "bytes": 2347064,
+      "mime": "image/png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGBA"
+    },
+    {
+      "path": "vfx/question-stone-inscription-exact-v1.png",
+      "bytes": 6274,
+      "mime": "image/png",
+      "width": 110,
+      "height": 250,
+      "mode": "RGBA"
     },
     {
       "path": "vfx/title/title-mountain-mist-far-v1.png",

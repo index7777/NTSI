@@ -20,6 +20,10 @@ export class HeartManualGameController extends RhythmTimingController {
     );
   }
 
+  currentCultivationReward() {
+    return this.stats.perfect * 3 + this.stats.good * 2 + this.stats.normal;
+  }
+
   proficiency() {
     const attempts = this.stats.strikes + this.stats.miss;
     if (!attempts) return 0;

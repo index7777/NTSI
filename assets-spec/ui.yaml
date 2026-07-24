@@ -5,6 +5,163 @@ defaults:
   style: { linework: handpainted_ink, lighting: neutral, shadow: none, palette: warm_ink_jade_gold }
   constraints: [one UI element only, transparent background, no outer black fog, no panel unless specified, no cropped edges]
 assets:
+  - id: ui_cultivation_top_hud_parchment_001
+    name: cultivation_top_hud_parchment
+    status: candidate
+    canvas: { width: 2048, height: 683, transparent: true }
+    references: { gameplay_mockup: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png }
+    constraints: [one top parchment backing only, no text, no icons, no people, no black fog, no cropped edges]
+  - id: ui_cultivation_return_arrow_001
+    name: cultivation_return_arrow
+    status: candidate
+    canvas: { width: 1254, height: 1254, transparent: true }
+    references: { gameplay_mockup: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png }
+    constraints: [one left arrow only, no text, no panel, no people, no cropped edges]
+  - id: ui_cultivation_time_hourglass_001
+    name: cultivation_time_hourglass
+    status: candidate
+    canvas: { width: 1254, height: 1254, transparent: true }
+    references: { gameplay_mockup: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png }
+    constraints: [one hourglass only, no text, no panel, no people, no cropped edges]
+  - id: ui_cultivation_pause_ink_001
+    name: cultivation_pause_ink
+    status: candidate
+    canvas: { width: 1254, height: 1254, transparent: true }
+    references: { gameplay_mockup: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png }
+    constraints: [one pause symbol only, no text, no panel, no people, no cropped edges]
+  - id: ui_cultivation_information_parchment_001
+    name: cultivation_information_parchment
+    status: candidate
+    canvas: { width: 1148, height: 1369, transparent: true }
+    references: { gameplay_mockup: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png }
+    constraints: [one reusable information parchment only, no text, no portrait, no divider, no people, no cropped edges]
+  - id: ui_cultivation_information_parchment_002
+    name: cultivation_information_parchment_framed_v2
+    status: approved
+    canvas: { width: 1024, height: 1280, transparent: true, chroma_key: "#00ff00" }
+    references:
+      style_master: art/references/ui/game-interface-style-v1.png
+      layout_only: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style:
+      linework: handpainted_ink
+      proportions: compact_vertical_information_panel
+      lighting: neutral
+      shadow: none
+      palette: warm_ivory_rice_paper_muted_ink_gold
+    constraints:
+      - newly illustrated original asset, do not crop or trace any reference image
+      - one reusable vertical information parchment only
+      - clean regular straight edges on all four sides
+      - subtle handmade rice-paper fibers with a restrained thin warm-gray border
+      - no text, no numbers, no portrait, no divider, no icons, no people
+      - no ink wash illustration, no bamboo, no mountain, no plant, no corner painting
+      - no outer black fog, no cast shadow, no floor, no wall
+      - "perfectly flat solid #00ff00 background outside the parchment"
+      - "no #00ff00 color inside the parchment"
+      - generous padding and no cropped edges
+    manual_checks:
+      - clearly differs from the layout reference and is not an extracted panel
+      - matches the clean straight-edged parchment panels in the approved game-interface style master
+      - remains readable behind live Traditional Chinese text at 230x260 display size
+  - id: ui_cultivation_top_hud_parchment_002
+    name: cultivation_top_hud_parchment_framed_v2
+    status: approved
+    canvas: { width: 1536, height: 512, transparent: true, chroma_key: "#00ff00" }
+    references: { style_master: art/references/ui/game-interface-style-v1.png }
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style: { linework: handpainted_ink, proportions: wide_horizontal_hud_strip, lighting: neutral, shadow: none, palette: warm_ivory_rice_paper_muted_gray }
+    constraints:
+      - newly illustrated original asset, do not crop or trace the reference
+      - one wide horizontal parchment strip only
+      - clean regular straight edges on all four sides
+      - subtle rice-paper fibers and restrained thin warm-gray border
+      - three very thin restrained vertical section separators only
+      - no text, no number, no icon, no portrait, no people
+      - no ink wash, no landscape, no bamboo, no plant, no ornament, no black fog
+      - "perfectly flat solid #00ff00 background outside the parchment"
+      - no cast shadow, generous padding, no cropped edges
+  - id: ui_cultivation_bottom_hint_parchment_002
+    name: cultivation_bottom_hint_parchment_framed_v2
+    status: approved
+    canvas: { width: 1536, height: 512, transparent: true, chroma_key: "#00ff00" }
+    references: { style_master: art/references/ui/game-interface-style-v1.png }
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style: { linework: handpainted_ink, proportions: wide_horizontal_hint_strip, lighting: neutral, shadow: none, palette: warm_ivory_rice_paper_muted_gray }
+    constraints:
+      - newly illustrated original asset, do not crop or trace the reference
+      - one wide horizontal parchment strip only
+      - clean regular straight edges on all four sides
+      - subtle rice-paper fibers and restrained thin warm-gray border
+      - no divider, no text, no number, no icon, no portrait, no people
+      - no ink wash, no landscape, no bamboo, no plant, no ornament, no black fog
+      - "perfectly flat solid #00ff00 background outside the parchment"
+      - no cast shadow, generous padding, no cropped edges
+  - id: ui_minigame_npc_information_parchment_002
+    name: minigame_npc_information_parchment_framed_v2
+    status: approved
+    canvas: { width: 1536, height: 768, transparent: true, chroma_key: "#00ff00" }
+    references: { style_master: art/references/ui/game-interface-style-v1.png }
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style: { linework: handpainted_ink, proportions: wide_horizontal_dialogue_panel, lighting: neutral, shadow: none, palette: warm_ivory_rice_paper_muted_gray }
+    constraints:
+      - newly illustrated original asset, do not crop or trace the reference
+      - one wide horizontal minigame NPC information parchment only
+      - clean regular straight edges on all four sides
+      - subtle rice-paper fibers and restrained thin warm-gray border
+      - large clear minigame tip area and clear portrait-safe area without a drawn divider
+      - no text, no name, no number, no icon, no portrait, no people
+      - no ink wash, no landscape, no bamboo, no plant, no ornament, no black fog
+      - "perfectly flat solid #00ff00 background outside the parchment"
+      - no cast shadow, generous padding, no cropped edges
+    manual_checks:
+      - minigame HUD use only
+      - must never replace xuan-dialogue-panel or any story dialogue backing
+  - id: ui_cultivation_information_parchment_unframed_001
+    name: cultivation_information_parchment_unframed_v1
+    status: candidate
+    canvas: { width: 1024, height: 1280, transparent: true, chroma_key: "#00ff00" }
+    references: { style_master: art/references/ui/game-interface-style-v1.png, framed_family: art/active/ui/cultivation-hud/information-parchment-straight-v2.png }
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style: { linework: none, proportions: compact_vertical_information_panel, lighting: neutral, shadow: none, palette: warm_ivory_rice_paper }
+    constraints: [one plain vertical rice-paper panel only, clean regular straight edges, subtle paper fibers, no border, no frame, no corner line, no divider, no ornament, no ink wash, no illustration, no text, no icon, no person, "perfectly flat solid #00ff00 background outside the parchment", no cast shadow, no cropped edges]
+  - id: ui_cultivation_top_hud_parchment_unframed_001
+    name: cultivation_top_hud_parchment_unframed_v1
+    status: candidate
+    canvas: { width: 1536, height: 512, transparent: true, chroma_key: "#00ff00" }
+    references: { style_master: art/references/ui/game-interface-style-v1.png, framed_family: art/active/ui/cultivation-hud/top-hud-parchment-straight-v2.png }
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style: { linework: none, proportions: wide_horizontal_hud_strip, lighting: neutral, shadow: none, palette: warm_ivory_rice_paper }
+    constraints: [one plain wide rice-paper strip only, clean regular straight edges, subtle paper fibers, no border, no frame, no corner line, no section separator, no ornament, no ink wash, no illustration, no text, no icon, no person, "perfectly flat solid #00ff00 background outside the parchment", no cast shadow, no cropped edges]
+  - id: ui_cultivation_bottom_hint_parchment_unframed_001
+    name: cultivation_bottom_hint_parchment_unframed_v1
+    status: candidate
+    canvas: { width: 1536, height: 512, transparent: true, chroma_key: "#00ff00" }
+    references: { style_master: art/references/ui/game-interface-style-v1.png, framed_family: art/active/ui/cultivation-hud/bottom-hint-parchment-straight-v2.png }
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style: { linework: none, proportions: wide_horizontal_hint_strip, lighting: neutral, shadow: none, palette: warm_ivory_rice_paper }
+    constraints: [one plain wide rice-paper strip only, clean regular straight edges, subtle paper fibers, no border, no frame, no corner line, no divider, no ornament, no ink wash, no illustration, no text, no icon, no person, "perfectly flat solid #00ff00 background outside the parchment", no cast shadow, no cropped edges]
+  - id: ui_minigame_npc_information_parchment_unframed_001
+    name: minigame_npc_information_parchment_unframed_v1
+    status: candidate
+    canvas: { width: 1536, height: 768, transparent: true, chroma_key: "#00ff00" }
+    references: { style_master: art/references/ui/game-interface-style-v1.png, framed_family: art/active/ui/cultivation-hud/minigame-npc-information-parchment-straight-v2.png }
+    view: { projection: front, angle: straight_on, facing: neutral }
+    style: { linework: none, proportions: wide_horizontal_minigame_npc_panel, lighting: neutral, shadow: none, palette: warm_ivory_rice_paper }
+    constraints: [one plain wide minigame NPC information rice-paper panel only, clean regular straight edges, subtle paper fibers, no border, no frame, no corner line, no divider, no ornament, no ink wash, no illustration, no text, no icon, no portrait, no person, "perfectly flat solid #00ff00 background outside the parchment", no cast shadow, no cropped edges]
+    manual_checks: [minigame HUD use only, must never replace xuan-dialogue-panel or any story dialogue backing]
+  - id: ui_cultivation_bottom_hint_parchment_001
+    name: cultivation_bottom_hint_parchment
+    status: candidate
+    canvas: { width: 1984, height: 793, transparent: true }
+    references: { gameplay_mockup: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png }
+    constraints: [one bottom hint parchment only, no text, no keys, no icons, no people, no cropped edges]
+  - id: ui_cultivation_right_metric_ink_001
+    name: cultivation_right_metric_ink
+    status: candidate
+    canvas: { width: 1086, height: 1450, transparent: true }
+    references: { gameplay_mockup: art/references/gameplay/water-carry/water-carry-gameplay-layout-reference-v2.png }
+    constraints: [one large ink wash backing only, no text, no numbers, no icons, no people, no cropped edges]
   - id: ui_bamboo_combo_calligraphy_001
     name: bamboo_combo_calligraphy_gold
     status: candidate

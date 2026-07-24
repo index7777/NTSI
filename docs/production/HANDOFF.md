@@ -1,5 +1,7 @@
 # 《九劫問仙》開發交接
 
+> 修行小遊戲最新狀態先讀：`docs/production/HANDOFF_2026-07-24_MINIGAMES.md`。該文件覆蓋本文件內較早的 ComboCounter、舊 HUD、舊結算與挑水描述。
+
 ## 2026-07-24 最新施工方向與跨電腦同步
 
 - 精確順序與驗收以 `docs/production/WORK_QUEUE.md` 的「2026-07-24 分階段施工與同步台帳」為準。
@@ -25,6 +27,7 @@
 - 雜役處新增符合3.5頭身水墨Q版母板的候選 `art/candidates/scenes/chore-office-registration-chibi-v3.png`；窗口人物是不同服制的協助師姐，場景不烘入壞執事。對應七名雜役弟子與一名師姐的可拆分綠幕母板保存在 `art/candidates/characters/chore-office-npcs/chore-office-npc-lineup-chroma-v1.png`，尚未驗收、去背或接入runtime。
 - 問仙石水平置中重生成候選為 `art/candidates/scenes/question-stone-centered-generated-v2.png`，尚未經使用者確認，不得覆蓋現行正式背景。
 - 雜役處轉場只淡入／淡出「雜役處」三字，移除隊伍說明與「繼續」。標題退場後自動播放壞執事四句正式對話；執事交付心法名稱固定為《清心訣》，不設「收下」按鈕。四句對話結束後強制直接進第一次砍竹，不得先進活動頁或自由探索。
+- 心法名稱全案統一為《清心訣》；《納氣訣》是已被最新要求覆蓋的過時名稱，文件、台詞、UI與程式不得再使用。
 - 長按問仙石放開滑鼠時，手掌素材必須立即消失；完成蓄力後也不得黏在石面。
 - 全部NPC對話預設使用角色同服裝版本的1024×1024透明胸像，放在宣紙對話卡右側；頭像右緣離卡片右緣2個中文字寬，下緣離卡片下緣1個中文字高。只有使用者另行指定時才用全身立繪。
 - 問仙石第一次教學與靈根揭示後對話共用 `game/public/assets/characters/portraits/sect-elder-serious-1024-v1.png`；姓名分隔線固定為姓名字數加一個字寬，逐字播放與點擊規則一致。
@@ -84,7 +87,7 @@
 - 參悟心法25秒原型已新增 `game/src/minigames/heart-manual/`，使用相同時間判定核心；中央為氣海→關元→膻中→神庭→百會循環，玩家只點擊時機，不拖曳或點穴位。背景原圖已在 `art/active/scenes/heart-manual-room-landscape-v1.png` 與 runtime。實機已進入畫面，發現左側資訊缺紙張承托、右側安全邊界過近後已修改，但修改後尚未完成第二輪實機驗證。
 - 挑水已新增 `game/src/minigames/water-carry/config.ts`、`BalanceController.ts`、`WaterCarryGameController.ts`，並以25秒、A／D／左右鍵、左右觸控區、慣性、隨機外力、左右獨立灑水、持續失衡0.45秒後回彈救回、固定修為+10、單次結算為目標重寫 `playWaterTask()`。目前角色／扁擔／水桶仍是可替換的程式分層原型。
 - 挑水明亮無HUD、無角色背景候選已保存為 `art/candidates/scenes/water-carry-bright-landscape-v2.png`；尚未經使用者明確定案、尚未複製到 `game/public/assets`、尚未接入preload，當前挑水程式仍暫用砍竹背景。
-- 最後一次成功 `npm run build` 發生在挑水重構之前。挑水的大段程式修改尚未執行TypeScript建置、資產驗證或實機測試；新模型不得聲稱目前build通過。
+- 歷史狀態（已過時）：挑水重構初期曾尚未執行 TypeScript 建置。2026-07-24 最新共用 HUD／倒數／結算整合後已重新執行 `npm run build` 並成功；但瀏覽器實機、觸控與多尺寸驗收仍未完成，不得把「建置通過」誤寫成「玩法已驗收」。
 
 ### 唯一安全下一步
 
@@ -237,7 +240,7 @@ npm run build
 1. 依橫式母板拆分 HUD、紙卷、木框、圖示、按鈕狀態與進度元件，不得整張使用母板。
 2. 重做橫式首圖、選角、問仙石、宗門主庭院、洞天與築基洞府；核心場景需卯時、午時、酉時三版本。
 3. 接入「宗門主庭院 → 場景卡 → 小遊戲 → 結算 → 時段推進」正式流程。
-4. 完成外門壞執事贈送《納氣訣》劇情與人物／表情資產驗收。
+4. 完成外門壞執事交付《清心訣》劇情與人物／表情資產驗收。
 5. 完成修行、渡劫、突破、跌境與遊玩時數統計介面。
 
 - 待跨境服裝正式驗收後，補齊男女玩家各境界的活動劇情場景卡；卡片演出隨境界升級，小遊戲操作暫時一致。
@@ -270,3 +273,15 @@ npm run build
 - 右側連擊數字為獨立 DOM/CSS 元件 `game/src/minigames/shared/ComboCounter.ts`，數值只讀既有 `controller.stats.combo`；「連擊」中文字使用 `combo-calligraphy-gold-v1.png`，下層使用 `combo-ink-backing-v1.png`，三者保持獨立分層。0 時整組隱藏，增加時數字播放 220ms 短促上浮縮放，10／25 以上採克制的淡金分級，暫停不重置。
 - 左側竹子資訊的「超額完成」固定另起一行，避免數字變長時橫向超出資訊卡。
 - 砍竹結算已套共用 `shared-result-panel-v1.png`，只有「修行完成」置中；其餘標籤靠左、所有數字固定同一起始線。八列內容依序淡入，底部為「再次修行／離開」兩顆 HUD 按鈕。
+# NPC 生成與方向處理強制規則
+
+任何新對話、新模型在生成、編修或接入 NPC 資產前，必須先完整閱讀：
+
+- `docs/art/NPC_MODULAR_CHARACTER_STANDARD.md`
+- `assets-spec/characters.yaml`
+
+NPC 只允許使用成年男、成年女、孩童三種共用身材模組。建立人物差異時，只能替換頭部、髮型、服裝與配飾，不得為單一 NPC 重新自由設計身材比例。
+
+角色需要改變面向時，只能在 Phaser、CSS 或其他執行環境中水平反轉既有角色圖，不得為左右方向重新生成。角色圖、NPC 對話底板與文字必須分層；反轉只作用於角色圖，對話框和文字不得被鏡像。
+
+所有 NPC 生成提詞必須由 `assets-spec/characters.yaml` 的固定欄位組裝，不得自由發揮。至少鎖定身材模組、角色識別、頭部、髮型、服裝、配飾、表情、姿勢、鏡頭、光源、透明背景、角色一致性與限制條件。

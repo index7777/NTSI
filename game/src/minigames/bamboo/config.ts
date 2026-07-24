@@ -1,4 +1,5 @@
 import type { RhythmJudgement } from "../shared/RhythmTimingController";
+import { DEFAULT_STREAK_ACCELERATION, DEFAULT_STREAK_MIN_INTERVAL_MS } from "../shared/streakAcceleration";
 
 export type BambooJudgement = RhythmJudgement;
 
@@ -9,13 +10,9 @@ export const BAMBOO_GAME_CONFIG = {
   ringStartRadius: 142,
   timingWindows: { PERFECT: 70, GOOD: 150, NORMAL: 250 },
   scoreValues: { PERFECT: 100, GOOD: 70, NORMAL: 40, MISS: 0 },
-  comboSpeedTable: [
-    { minCombo: 20, intervalMs: 900 },
-    { minCombo: 10, intervalMs: 1050 },
-    { minCombo: 5, intervalMs: 1200 },
-    { minCombo: 0, intervalMs: 1400 },
-  ],
-  minIntervalMs: 850,
+  comboSpeedTable: DEFAULT_STREAK_ACCELERATION,
+  streakAccelerationEnabled: true,
+  minIntervalMs: DEFAULT_STREAK_MIN_INTERVAL_MS,
   randomVariationMs: 80,
   nextRoundDelayMs: 220,
   passiveResetAtTarget: true,
@@ -32,5 +29,5 @@ export const BAMBOO_GAME_CONFIG = {
 
 export function bambooIntervalForCombo(combo: number) {
   const entry = BAMBOO_GAME_CONFIG.comboSpeedTable.find((row) => combo >= row.minCombo);
-  return Math.max(BAMBOO_GAME_CONFIG.minIntervalMs, entry?.intervalMs ?? 1400);
+  return Math.max(BAMBOO_GAME_CONFIG.minIntervalMs, entry?.intervalMs ?? 1300);
 }

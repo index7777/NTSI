@@ -1,4 +1,21 @@
 version: 1
+generation_system:
+  prompt_source: docs/art/NPC_MODULAR_CHARACTER_STANDARD.md
+  prompt_field_order: [body_module, identity_reference, head, hairstyle, outfit, accessories, expression, pose, camera, lighting, transparent_background, identity_locked, constraints]
+  orientation_rule: use_runtime_flip_x_never_regenerate_for_facing
+  flip_scope: character_layer_only_never_dialogue_panel_or_text
+  shared_body_modules:
+    adult_male:
+      id: body_module_adult_male_001
+      locked: [skeleton, shoulder_width, limb_length, hand_scale, head_to_body_ratio, camera, lighting]
+    adult_female:
+      id: body_module_adult_female_001
+      locked: [skeleton, shoulder_width, limb_length, hand_scale, head_to_body_ratio, camera, lighting]
+    child:
+      id: body_module_child_001
+      locked: [skeleton, shoulder_width, limb_length, hand_scale, head_to_body_ratio, camera, lighting]
+  replaceable_layers: [head, hairstyle, outfit, accessories]
+  forbidden_variation: [new_body_proportions_per_npc, regenerated_opposite_facing, baked_background, baked_dialogue_panel]
 assets:
   - id: player_male_mortal_001
     category: character
